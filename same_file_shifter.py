@@ -11,6 +11,8 @@ import IPCHECKER as IPx
 from IPCHECKER import *
 from subprocess import call
 import pprint
+import rich
+from rich import print
 
 
 # from pprint import pprint
@@ -177,21 +179,48 @@ def shellSort0(input_list):
 
 
 class change_info():
+    busy = False
+    delay = .001
     def __init__(self, p):
         # change_dirs = self.change_dirs
         self.p = p
 
     def make_dirs(self, p):
+        while self.busy:
+            return f'Moving Dirs'
+            pass #####
         ## creates child path using p
         return f'Changing {self.p}'
 
     def move_dirs(self, p):
-        # first seperate files names 
+        while self.busy:
+            return f'Moving Dirs'
+        # first seperate files names
         # move dirs using os and sub-dirs using Path (p)
         pass
 
     def move_files(self, p):
+        while self.busy:
+            return f'Moving files'
         pass
+
+    ######### FOR THREADING #######
+    def __enter__(self):
+        self.busy = True
+        t1 = threading.Thread(target=self.make_dirs)
+        t1.start()
+        t2 = threading.Thread(target=self.move_dirs)
+        t2.start()
+        t2.join()
+        t3 = threading.Thread(target=self.move_files)
+        t3.start()
+        t3.join()
+
+    def __exit__(self, exception, value, tb):
+        self.busy = False
+        time.sleep(self.delay)
+        if exception is not None:
+            return False
 
 
 try:
@@ -308,7 +337,6 @@ except Exception as f:
     traceback.print_exc()
     print('X' * 50)
     print(str(f))
-
     print()
 
 ## or while?
