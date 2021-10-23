@@ -6,13 +6,15 @@ import time
 import shutil
 from time import sleep
 from tqdm import tqdm
-import traceback, logging, sys, os, asyncio, random, platform, os, os.path
+import traceback, logging, sys, os, asyncio, random, platform, os, os.path, threading
 import IPCHECKER as IPx
 from IPCHECKER import *
 from subprocess import call
 import pprint
 import rich
-from rich import print
+
+
+# from rich import print
 
 
 # from pprint import pprint
@@ -119,7 +121,6 @@ reset = color.reset
 
 def display_header():
     # print('*' * 75)
-
     color_red = Colors()
     global red0
     red0 = color_red.fgRed
@@ -179,26 +180,151 @@ def shellSort0(input_list):
 
 
 class change_info():
-    busy = False
+    busy = True
     delay = .001
+    CLASS_PARENT = pathlib.Path(__file__).parent.resolve()  ##
+    CLASS_CWD = os.getcwd()
+    CURRENT_TIME = time.time()
+    CURRENT_CLOCK = time.ctime(CURRENT_TIME)
+    CLASS_PATH = pathlib.Path.cwd()
+
     def __init__(self, p):
         # change_dirs = self.change_dirs
         self.p = p
 
-    def make_dirs(self, p):
-        while self.busy:
-            return f'Moving Dirs'
-            pass #####
-        ## creates child path using p
-        return f'Changing {self.p}'
+    def get_sys_info(self, p):
+        # print('** ::Getting System Info :: && Starting Threading Process ::')
+        # while self.busy:
+        print(f' :: {blue} Getting System Info ::,\n current time {reset} {yellow} {self.CURRENT_CLOCK} {reset}')
+        global PARENT
+        PARENT = pathlib.Path(__file__).parent.resolve()
+        CURRENT_USER = os.path.basename(PARENT)
+        NORMALIZE_PATH = os.path.normpath(PARENT)
+        REAL_PATH = os.path.realpath(PARENT)
+        WSL_PATH = pathlib.Path.cwd()
+        print(f'* Path Object (p) {red} {p} {reset}')
+        print(f'* WSL Path {bblue} {WSL_PATH}{reset}')
+        print(f'* Current User: {bblue}{CURRENT_USER}{reset}')
+        print(f'* Parent Directory {bblue}{PARENT}{reset}')
+        print(f"* Normalized Path {bblue}{NORMALIZE_PATH}{reset}")
+        print(f"* Real Path {bblue}{REAL_PATH}{reset}")
 
-    def move_dirs(self, p):
+    @staticmethod  ## find len to get a stop pass
+    def write_info(info):
+        try:
+            with open('file_info.txt', 'a') as f:
+                if len(info) >= 0:
+                    line_ticker = 0
+                    for line in info:
+                        strLine = str(line)
+                        f.write(strLine)
+                        f.write("\n")
+                        line_ticker += 1
+                        if line_ticker == len(info):
+                            return f'Successfully wrote cwd info to .txt'
+
+                elif not info:
+                    return f'{red}No Info Found, moving on... {reset} \n [ :: List Inputted::] {bblue}{info} {reset}'
+                    # pass
+                else:
+                    print(f'{red} System Error in .txt write')
+        except Exception as E:
+            traceback.print_exc()
+            print(f'{red}** [SYSTEM] Error in writing CWD info to .txt{reset}')
+            print(str(E))
+
+
+    @staticmethod
+    def regex_exclusions():
+        inclusions = r'|'.join
+        exclusions =
+
+        return inclusions, exclusions
+    def display_all_files(self, p):
+        path_str = str(p)  ### <--- may have to do that weird object thing
+        excludes = [path_str]
+        includes = ['.txt', '.iso', '.doc', '.rar', '.tar', '.odt', '']  ## might have to take out '', it could pull in folders
+        Includes = regex_exclusions()
+
+
+        print(f'Finding All Folders, \n in {bblue}{p}{reset} \n current time {yellow}{self.CURRENT_CLOCK}{reset}')
+        print(f'Finding All Files, \n current time {self.CURRENT_CLOCK}')
+        print(f'** Enter the Extension You are looking For :: ')
+        include_inSearch =
+        for root, dirs, files in os.walk(p):
+            files = [os.path.join(root, f) for f in files]
+          #  files_exclude = [f for f in files if not re.match(excludes, f)]
+          #  files_include = [f for f in files if not re.match(includes, f)]
+            #print(f' ** Excludes Files ** \n {red}{files_exclude}{reset}')
+            print(f' ** Excludes Files ** \n {red}{files}{reset}')
+
+            return f'files_exclude ** \n {files_include} **'
+
+        ## exclude files ---> dirs
+
+    def display_all_folders(self, p):
+        for root, dirs, files in os.walk(p):
+            print(root + dirs)
+            pass
+
+    # 1
+    ### may need to convert to class method for path access . if conversion, rewrite another for instance access
+    def find_duplicates(self, p):
+        print(f'Finding Duplicates, \n current time {self.CURRENT_CLOCK}')
+        # while self.busy:  # thread t0
+        for dup01, dup02 in os.path.walk(path1, path2):
+            if os.path.samefile(path1, path2):
+                dupe_append = []
+                print(f'* :: Found Duplicates::')
+                print(f'* Duplicate One :: {dup01} \t\t ** Duplicate Two :: {dup02}')
+                dupe_list.append(path1, path2)
+
+                return dup01, dup02
+            else:
+                break
+            # break
+
+    # 2
+    def split_files(self, p):  ## first find duplicates and return them
+        print(f'Splitting directories, \n current time {self.CURRENT_CLOCK}')
+        print(f'[1] :: Finding Duplicate Files / Directies ')
+        # dup_file, dup_folder = self.find_duplicates(self, )
+
+        pass
+
+    # 3
+    def make_dirs(self, p):
+        print(f'Making directories,\n current time {self.CURRENT_CLOCK}')
+        pass
+
         while self.busy:
-            return f'Moving Dirs'
+            return f'*Making Dirs'
+            pass  #####
+        ## creates child path using p
+        return f' *Changing {self.p}'
+
+    # 4
+    def move_dirs(self, p):
+        print(f'moving directories,\n current time {self.CURRENT_CLOCK}')
+        while self.busy:
+            for root, dirs, files in os.walk(p):
+                pass
+            return ' *Moving Directories'
+
+        while self.busy:  ## initiate threading instance
+            for x in os.listdir(p):
+                print(x)
+                if x in os.path(PARENT):
+                    print(x)  # # # #
+                # return x
+            else:
+                return f'* did not find shit to print'
+
         # first seperate files names
         # move dirs using os and sub-dirs using Path (p)
         pass
 
+    # 5
     def move_files(self, p):
         while self.busy:
             return f'Moving files'
@@ -207,6 +333,9 @@ class change_info():
     ######### FOR THREADING #######
     def __enter__(self):
         self.busy = True
+        t0 = threading.Thread(target=self.get_sys_info(p))
+        t0.start()
+        # t0.join()
         t1 = threading.Thread(target=self.make_dirs)
         t1.start()
         t2 = threading.Thread(target=self.move_dirs)
@@ -299,18 +428,22 @@ print(
 print(f"Alternately, you can type {yellow} [cwd], [c], or [here] {reset} to work in the current directory")
 path_to_work_in = input()
 
+################  ######################  #############################  ########################## ##############
+#############  ######################  #############################  ########################## ##############
+
+
 cwd_ans = ['cwd', 'c', 'here', 'home', '']
 fail_check = ['/']
 
+####
 ## find path
-
 try:
     if path_to_work_in in cwd_ans:
         p = Path(starting_path)  ## create path object
 
     elif path_to_work_in in fail_check:
         p = Path(path_to_work_in)  ## create path object
-        print(f' Moving CWD to: {bblue}{path_to_work_in}{reset}')
+        print(f' {red} Moving CWD to: {reset} {bblue} {p} {reset}')
 
     else:  # if any garbage is thrown at us
         strike_out = 1
@@ -332,6 +465,7 @@ try:
                     print(' You entered too an invalid path too many times, system exiting'), time.sleep(2)
                     sys.exit(0)
                 continue
+
 except Exception as f:
     print()
     traceback.print_exc()
@@ -343,65 +477,157 @@ except Exception as f:
 if p.exists():
     if platform.platform() == "Linux-4.4.0-22000-Microsoft-x86_64-with-glibc2.32":
         print('It seems you may be on Windows WSL, here is your CWD: ')
+        # CURRENT_TIME = time.time()
+        # CURRENT_CLOCK = time.ctime(CURRENT_TIME)
+        # CLASS_PATH = pathlib.Path.cwd()
+        current_info_c = change_info(p)
+        # current_info00 = \
+        current_info_c.get_sys_info(p)
+        # current_info00()
+
+        ###
         wsl_path = pathlib.Path.cwd()
-        print(wsl_path)
+        print(f'* WSL Path {wsl_path}')
+
         print(), print()
-        global PARENT
-        PARENT = pathlib.Path(__file__).parent.resolve()
-        print(PARENT)
+        # global PARENT
+        # PARENT = pathlib.Path(__file__).parent.resolve()
+        # CURRENT_USER = os.path.basename(PARENT)
+        # NORMALIZE_PATH = os.path.normpath(PARENT)
+        # REAL_PATH = os.path.realpath(PARENT)
+        # print(f'* Path Object (p) {p}')
+        #
+        # print(f'* WSL Path {wsl_path}')
+        # print(f'* Current User: {CURRENT_USER}')
+        # print(f'* Parent Directory {PARENT}')
+        # print(f"* Normalized Path {NORMALIZE_PATH}")
+        # print(f"* Real Path {REAL_PATH}")
 
-    try:
-        fail_tick = 0
-        while fail_tick <= 3:
-            print('f View Directory Listing? [Yes or y]')
-            question_input = input('')
-            if question_input in answer_00:
-                ## DIRECTORIES ##
-                print(f'{blue} :: Directories :: {reset}')
-                dirs = os.listdir()
-                dirs.sort()
-                pprint.pprint(dirs)
+        try:
+            fail_tick = 0
+            while fail_tick <= 3:
+                print('f View Directory Listing? [Yes or y]')
+                question_input = input('')
+                if question_input in answer_00:
+                    ## DIRECTORIES ##
+                    print(f'{blue} :: Directories :: {reset}')
+                    print('X' * 25)
 
-                ## SUB DIRECTORIES ##
-                print(f'{blue} :: Sub-Directories :: {reset}')
-                subdirs = [x for x in p.iterdir() if x.is_dir()]
-                subdirs.sort()
-                pprint.pprint(subdirs)
-                file_choices = ['1','[1]', 'files']
-                folder_choices = ['2','[2]', 'folders']
-
-                print('X' * 50)
-                print(' :: PARENT DIR::')
-                print(PARENT)
-                print('** Choose [1] move similar files or [2] similar folders')
-                choice = input('')
-                if choice in file_choices:
+                    dirs = os.listdir()
+                    dirs.sort()
+                    pprint.pprint(dirs)
+                    ## WRITE DIR TO .TXT ##
+                    dir_write_check = change_info.write_info(dirs)
+                    print(dir_write_check)
+                    ## SUB DIRECTORIES ##
                     print(), print()
+                    print(f'{blue} :: Sub-Directories :: {reset}')
+                    print('X' * 25)
+                    subdirs = [x for x in p.iterdir() if x.is_dir()]
+                    subdirs.sort()
+                    print(f'{bblue} :: {subdirs} :: {reset}')
+
+                    ### WRITE SUB DIRS TO .TXT ###
+                    file_write_check = change_info.write_info(subdirs)  ###
+                    print(file_write_check)
+                    if file_write_check:
+                        print(f'{bblue} : Successfully Wrote Sub-Dirs to .txt : {reset}')
+                    file_choices = ['1', '[1]', 'files', 1]
+                    folder_choices = ['2', '[2]', 'folders', 2]
+
+                    ## ask user if they want to see sub-directory contents ::
+                    print(f'** Would you like to see the all the sub directory contents? ')
+                    all_content = input()
+                    if all_content in answer_00:
+                        for files in os.walk(p, topdown=False, followlinks=True):
+                            pprint.pprint(files)
+                    elif all_content in answer_01:
+                        for files in os.walk(p, topdown=False, followlinks=True):
+                            change_info.write_info(files)
+                    else:
+                        print(f'{red} :: INVALID INPUT :: {reset},, \n printing all dirs, then moving on..')
+                        for files in os.walk(p, topdown=False, followlinks=True):
+                            change_info.write_info(files)
+                            pprint.pprint(files)
+
+                    #####################  #############################
+                    #####################  #############################
+                    #####################  #############################
+                    #####################  #############################
+
+                    print('X' * 50)
+                    print(' :: Your Working DIR::')
+                    print(f"{red}{p}{reset}")
+                    print(f'{red}** [MAKE SURE THE PARENT DIR BELOW IS CORRECT, PRESS CTRL + Z TO TO EXIT] {reset}  ')
+                    print(f' :: PARENT DIR [To Be Worked On] \n {red} {p} {reset} ::')
+                    print()
                     print(
-                        f'{bblue} :: Moving Similarly  Files into new directory :: {reset}')
-                    file_00 = change_info(p)
-                    move_files = file_00.move_files(p)
-                    print(move_files)
-                    pass
-                elif choice in folder_choices:
-                    folder_00 = change_info(p)
-                    move_folder = folder_00.move_dirs(p)
+                        f'** Choose {yellow}[1]{reset} view all files or {yellow} [2]{reset} display duplicate folders {yellow}[3]{reset} move files')
+                    choice = input('')
+                    ###
+                    parsing_displayFile = ['1', 1, 'display files', 'display file', 'file', 'files', '[1]']
+                    parsing_displayDupe = ['2', 2, 'display dupe', 'display duplicate', 'duplicates', '[2]']
+                    parsing_moveFiles = ['3', 3, 'move files', 'move', '[3]']
 
-            elif question_input in answer_01:
-                print('## Saving Directory Contents to Dict ##')
-                break
-            else:
-                sys_exit = 3 - fail_tick
-                print(f'Invalid Input, you have {sys_exit} tries before sys.exit')
-                fail_tick += 1
-                if fail_tick == 3:
-                    print('Too many invalid attempts, system exiting.. ')
-                    time.sleep(1)
-                    sys.exit(0)
+                    ###
+                    file_00 = change_info(p)  ## obj instiate
+                    ## display all files
+                    if choice in parsing_displayFile:
+                        # move_files = file_00.move_files(p)
+                        with Spinner():
+                            print(f'** {bblue} initiating find_duplicates sequence {reset}')
+                            x = f'{red} add amt of duplicaters {reset}'
+                            print(f'** System found {x} {file_00.find_duplicates}')
+                            print(), print()
+                            print('X' * 50)
+                            print(f"{red}{file_00.get_sys_info(p)}{reset}")  ## pulls file from class method
+                            print(f'** {bblue}initiating {red} --FILE-- {reset} display-all-sequence {reset}')
+                            display_files = file_00.display_all_files(p)
+                            if display_files:
+                                print(display_files)
+                            else:
+                                print('** No files found with the extension indicated')
 
-    except Exception as f:
-        traceback.print_exc()
-        print(str(f))
+                    # find_duplicates = file_00.find_duplicates(p)
+                    elif choice in parsing_displayDupe:
+                        same_files = file_00.find_duplicates(p)
+                        with Spinner():
+                            print(f'** {bblue}initiating {red} --FILE-- {reset} display-dupe-sequence {reset}')
+                            find_duplicates = file_00.find_duplicates(p)
+                            x = f'{red} add amt of duplicaters {reset}'
+                            print(f'** System found {x} {find_duplicates}')
+                            pass
+
+                    ## ask uswer what they want to do. 1. display only files. 2. display duplicates. 3. group-move similar files.
+                    ## MOVE FOLDERS
+
+                    elif choice in folder_choices:
+                        folder_00 = change_info(p)
+                        print(), print()
+                        print('X' * 50)
+                        print(f' {blue}:: PARENT DIR [To Be Worked On] ::{reset}')
+                        print(f"{red}{folder_00.get_sys_info(p)}{reset}")  ## pulls file from class method
+                        with Spinner():
+                            print(f'** {bblue}initiating find_duplicates sequence {reset}')
+                            find_duplicates = folder_00.find_duplicates(p)
+                            x = f'{red} add amt of duplicaters {reset}'
+                            print(f'** System found {x} {find_duplicates}')
+
+                elif question_input in answer_01:
+                    print(' ## Saving Directory Contents to Dict ##')
+                    break
+                else:
+                    sys_exit = 3 - fail_tick
+                    print(f'Invalid Input, you have {sys_exit} tries before sys.exit')
+                    fail_tick += 1
+                    if fail_tick == 3:
+                        print('Too many invalid attempts, system exiting.. ')
+                        time.sleep(1)
+                        sys.exit(0)
+
+        except Exception as f:
+            traceback.print_exc()
+            print(str(f))
 #
 # else: ## if it is not a path, return back to user input
 # pass
