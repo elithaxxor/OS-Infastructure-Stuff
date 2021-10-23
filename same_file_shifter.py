@@ -1,25 +1,12 @@
-import os
-import os.path
+import traceback, logging, sys, os, asyncio, random, platform, os, os.path, threading
+import ctypes, rich, pprint, os.path, time, shutil, pathlib
 from os.path import exists
 from pathlib import Path
-import pathlib
-import time
-import shutil
 from time import sleep
 from tqdm import tqdm
-import traceback, logging, sys, os, asyncio, random, platform, os, os.path, threading
 import IPCHECKER as IPx
 from IPCHECKER import *
 from subprocess import call
-import pprint
-import rich
-
-
-# from rich import print
-
-
-# from pprint import pprint
-
 
 class Spinner:
     busy = False
@@ -643,6 +630,26 @@ class change_info():
         if exception is not None:
             return False
 
+def install():
+    sucessfull_install = []
+    subprocess.check_call([sys.executable, "-m", "pip", "install", threading])
+    if subprocess.check_call:
+        print(f'{yellow} Sucessfully Installed PIP')
+        sucessful_install.append('pip')
+    subprocess.check_call([sys.executable, "-m", "tqdm", "install", tqdm])
+    if subprocess.check_call:
+        print(f'{yellow} Sucessfully Installed TQDM')
+    subprocess.check_call([sys.executable, "-m", "pip", "datetime", datetime])
+    if subprocess.check_call:
+        print(f'{yellow} Sucessfully Installed datetime')
+
+    print('')
+
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
 
 try:
     print(IPx.IP)
@@ -656,6 +663,15 @@ try:
     system_info = platform.platform()
     os_name0 = platform.system()
 
+
+    ## new adds
+    big_names = platform.uname()
+    processor = platform.processor()
+    architecture = platform.architecture()
+    user_id = os.uname()
+    login = os.getlogin()
+    os.access(cwd)
+
     display_header()
     print(), print()
     print('X' * 150)
@@ -667,6 +683,71 @@ try:
     print(f'\033[1;35;m [{system_info}]  ...? '.center(width))
     print(f'\033[1;35;0m [{current_version}]  ...? '.center(width))  ### ADDD YOUR IP
     print(f'\033[1;35;0m [{IP}]  ...? '.center(width))  ### ADDD YOUR IP
+    print(f'\033[1;35;0m [{big_names}]  ...? '.center(width))  ### ADDD YOUR IP
+    print(f'\033[1;35;0m [{processor}]  ...? '.center(width))  ### ADDD YOUR IP
+    print(f'\033[1;35;0m [{architecture}]  ...? '.center(width))  ###
+    print(f'\033[1;35;0m [{user_id}]  ...? '.center(width))  ###
+    print(f'\033[1;35;0m [{login}]  ...? '.center(width))  ###
+    print(f'\033[1;35;0m [{current_version}]  ...? '.center(width))  ### ADDD YOUR IP
+
+    while True:
+        if 'Linux' in platform.system():  ## get root for linux
+            try:
+                print('X' * 35)
+                print(f' {Red} It Seems Like your on a Linux Distro, Please start with escalate privledge. {reset} ')
+                if not 'SUDO_UID' in os.environ.keys(): ##
+                    print(f'**{red}Must have SU Privledges.{reset}')
+                    print('[SYSTEM] Commencing Login Process. \n Enter your Password: ')
+                    print('X' * 35)
+                    password = getpass('* ')
+                    print()
+                    proc = Popen('sudo -S apache2ctl restart'.split(), stdin = PIPE, stderr = PIPE)
+                    proc.communicate(password.encode())
+                    if proc.communicate:
+                        print(f'**{yellow}Sudo Escelation Succesfull, moving on.. {reset}')
+                        break
+                    print(f'{red}** Sudo failed, attempting to run w/out privledges.. {reset}')
+                    break
+            except exception as e:
+                print('IO ERROR - MUST BE SUPER USER()): ', e)
+                sys.exit(1)
+        import ctypes, sys
+
+        if 'Windows' in platform.system():
+            print(f' {Red} It Seems Like your on a Windows Distro, Checking if you are admin. {reset} ')
+            if is_admin(): ## windows login
+                print(f'{yellow}**cool you are admin.. moving on.{reset}' )
+                break
+            else:
+                print(f'{yellow}** Attempting To Escelate Privledges{reset}')
+                ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+                if ctypes.windll.shell32.ShellExecuteW:
+                    print(f'{yellow} Windows Admin Escalation Succesful, moving on.. {reset}')
+                    break
+                else:
+                    print(f'{red}**[ERRNO]Cannot escalate.. proceeding without privledge.. ')
+                    break
+        if 'Darwin' in platform.system():  ## get root for Mac
+            try:
+                print('X' * 35)
+                print(f' {Red} It Seems Like your on a Linux Distro, Please start with escalate privledge. {reset} ')
+                if not 'SUDO_UID' in os.environ.keys(): ##
+                    print(f'**{red}Must have SU Privledges.{reset}')
+                    print('[SYSTEM] Commencing Login Process. \n Enter your Password: ')
+                    print('X' * 35)
+                    password = getpass('* ')
+                    print()
+                    proc = Popen('sudo -S apache2ctl restart'.split(), stdin = PIPE, stderr = PIPE)
+                    proc.communicate(password.encode())
+                    if proc.communicate:
+                        print(f'**{yellow}Sudo Escelation Succesfull, moving on.. {reset}')
+                        break
+                    print(f'{red}** Sudo failed, attempting to run w/out privledges.. {reset}')
+                    break
+            except exception as e:
+                print('IO ERROR - MUST BE SUPER USER()): ', e)
+                sys.exit(1)
+
 
     print('X' * 150)
     print('X' * 150)
@@ -675,7 +756,7 @@ try:
     print(f"{'X' * 50}".center(width))
     print(f"{'X' * 50}".center(width))
 
-    time.sleep(.5)
+    time.sleep(4)
     clear()
 
 except OSError as ose:
@@ -738,6 +819,8 @@ try:
         p = Path(path_to_work_in)  ## create path object
         print(f' {red} Moving CWD to: {reset} {bblue} {p} {reset}')
 
+
+
     else:  # if any garbage is thrown at us
         strike_out = 1
         while strike_out <= 5:
@@ -765,9 +848,37 @@ except Exception as f:
     print('X' * 50)
     print(str(f))
     print()
-
+#
+# os.F_OK: Tests existence of the path.
+# os.R_OK: Tests readability of the path.
+# os.W_OK: Tests writability of the path.
+# os.X_OK: Checks if path can be executed
 ## or while?
-if p.exists():
+
+### check if paths exists
+try:
+    while True:
+        if not p.exists():
+            print(f'{red}** Path Does  Not Exist \n[PATH]*[{p}] {reset}')
+            break
+        elif os.access(p, os.R_OK):
+            print(f'{red}** Path Is Not Readable \n[PATH]*[{p}] {reset}')
+            break
+        elif os.access(p, os.W_OK):
+            print(f'{red}** Path Is Not Writable \n[PATH]*[{p}] {reset}')
+            break
+            
+except OSError as ose:
+    traceback.print_exc()
+    print(str(ose))
+except Exception as E:
+    traceback.print_exc()
+    print(str(E))
+
+
+
+
+if p.exists() and os.access(p, os.R_OK) and os.access(p, os.W_OK):
     current_platform = platform.platform()
     if platform.platform():# == "Linux-4.4.0-22000-Microsoft-x86_64-with-glibc2.32":
         print(f'**It seems you may be on {yellow} {current_platform} {reset} \n {red}*The program may not work as expected if unture.{reset} ')
@@ -825,7 +936,7 @@ if p.exists():
 
                     ### WRITE SUB DIRS TO .TXT ###
                     ## Navigate Path object to sub dir, then print stats.
-                    # 
+                    #
                     fileSubs_stat = os.stat(subdirs)
 
                     fileSubs_write_check = change_info.write_info(subdirs)  ### write the sub dir
