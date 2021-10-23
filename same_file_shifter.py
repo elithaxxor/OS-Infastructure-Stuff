@@ -1,5 +1,6 @@
 import os
 import os.path
+from os.path import exists
 from pathlib import Path
 import pathlib
 import time
@@ -188,9 +189,19 @@ class change_info():
     CURRENT_CLOCK = time.ctime(CURRENT_TIME)
     CLASS_PATH = pathlib.Path.cwd()
 
-    def __init__(self, p):
+    def __init__(self, p): #declared here instead of class head
         # change_dirs = self.change_dirs
         self.p = p
+
+    @classmethod ## will print the class location, without (p) PATH object declared in functional portion
+    def info_fromClass(cls):
+        print(f'{red}  :: Information that was parsed to the Class instance :: {reset}')
+        print(f'{yellow}  :: Called From CLS Method :: {reset}')
+        print(f'{red} {cls.CLASS_PARENT} {reset}')
+        print(f'{red} {cls.CLASS_CWD} {reset}')
+        print(f'{red} {cls.CURRENT_TIME} {reset}')
+        print(f'{red} {cls.CURRENT_CLOCK} {reset}')
+        print(f'{red} {cls.CLASS_PATH} {reset}')
 
     def get_sys_info(self, p):
         # print('** ::Getting System Info :: && Starting Threading Process ::')
@@ -233,13 +244,42 @@ class change_info():
             print(f'{red}** [SYSTEM] Error in writing CWD info to .txt{reset}')
             print(str(E))
 
-
     @staticmethod
-    def regex_exclusions():
-        inclusions = []
-        exclusions =
+    def write_specific_info(info):
+        try:
+            with open('specific_file_info.txt', 'a') as f:
+                if len(info) >= 0:
+                    line_ticker = 0
+                    for line in info:
+                        strLine = str(line)
+                        f.write(strLine)
+                        f.write("\n")
+                        line_ticker += 1
+                        if line_ticker == len(info):
+                            return f'Successfully wrote cwd info to .txt'
+                elif not info:
+                    return f'{red}No Info Found, moving on... {reset} \n [ :: List Inputted::] {bblue}{info} {reset}'
+                    # pass
+                else:
+                    return f'{red} System Error in .txt write'
+        except Exception as E:
+            traceback.print_exc()
+            print(f'{red}** [SYSTEM] Error in writing CWD info to .txt{reset}')
+            print(str(E))
+            return str(E)
 
-        return inclusions, exclusions
+    ## regex inclusions to return fnmatch.translate for include/exclude filesystems ##
+    @staticmethod
+    def regex_inclusions(includes):
+        inclusions = r'|'.join([fnmatch.translate(x) for x in includes])
+        return inclusions
+    @staticmethod
+    def regex_exclusions(excludes):
+        exclusions = r'|'.join([fnmatch.translate(x) for x in excludes])
+        return exclusions
+
+    ## 0 display all files, ask user for ext or name, and search params. return search to code below
+    ## NEED TO ADD --> Write positinal args to .txt
     def display_all_files(self, p):
         no_append = ['none','n', 'no', 'c','cancel']
         path_str = str(p)  ### <--- may have to do that weird object thing
@@ -279,6 +319,8 @@ class change_info():
         exit_loops = ['e','E','Exit','EXIT', 'q','Q','quit','QUIT']
         search_fileQ = input('** ')
 
+
+        ### 01 ### START SEQUENCE TO PARSE BY EXTENSION
         if search_fileQ in search_ext_A: ## if user wants to search by file name
             print('X' * 50)
             print(f' Add the extensions you would like to search for. {yellow}[20 MAX]{reset}',
@@ -299,6 +341,9 @@ class change_info():
                     Flag = True
                     while Flag:
                         include_extension.append(str(search))
+                        input_extensions = change_info.getByext(add_extension)
+                        print(input_extenions)
+
                         print()
                         print('X' * 50)
                         print(f':: Extensions that will be included in the search :: \n {"X"*35} \n\t\t {yellow} {include_extension} {reset}')
@@ -309,6 +354,9 @@ class change_info():
                         print(f'{red} Limit Reached. {reset} Moving on to parse search.')
                         print(f':: Extensions that will be included in the search :: \n {"X"*35} \n\t\t {yellow} {include_extension} {reset}')
                         parsed_extensions = change_info.getByext(add_extension)
+                        write_extensions = change_info.write_specific_info(parsed_extensions)
+                        print(write_extensions)
+
                         print('**Parsed Extensions')
                         print('*', parsed_extensions)
                         return parsed_extensions
@@ -329,6 +377,8 @@ class change_info():
                         break
                     continue
 
+
+        #### START SEQUENCE FOR SEARCH BY FILE NAME ####
         if search_fileQ in search_ext_B:
             file_name_return = []
             print('X' * 50)
@@ -349,7 +399,7 @@ class change_info():
                 print()
                 if not add_name:
                     print('X' * 50)
-                    print(f'{red}**A specefic name was not specified, parsing ALL available values. (may take some time.){reset}')
+                    print(f'{red}**A specific name was not specified, parsing ALL available values. (may take some time.){reset}')
                     print(file_name_return)
                     print('X' * 50)
                     specified_files = change_info.get_fileByname(file_name_return)
@@ -372,10 +422,18 @@ class change_info():
                     print(f'{bblue} :: You added ::{reset}')
                     print(f'{yellow}** {file_name_return} {reset}')
                     print('X' * 50)
-                    specified_files = change_info.get_fileByname(file_name_return)
+                    if len(file_name_return) > 0:
+                        specified_files = change_info.get_fileByname(file_name_return)
+                        print(f'{red}** Use the keys to return back to menu {reset} \n'
+                              f'{yellow} {exit_loops}{reset}')
+                        print(f'{bblue} :: Files specified by name :: {reset}')
+                        print(specified_files)
+                        saved_specified_files = class_info.write_specified_info(specified_files)
+                        print(f'{red} Saved search [File-Search-byName] {reset}')
+                        print(saved_specified_files)
 
                     continue
-                elif ticktick == 20:
+                elif ticktick == 100:
                     break
                 else:
                     ticktick += 1
@@ -398,12 +456,14 @@ class change_info():
        # searchFlag = True
     ## FINISH THIS
     ## use os.walk and glob ##
+
+    ##00
     def get_fileByext(self, included_extension, excluded_extension): # might be able to remove positional params
         print('X' * 50)
         print(f' :: Excludes Extensions :: \n {red}{excluded_extension}{reset}')
         print('\t\t', excluded_extension), print()
         print('X' * 50)
-        print(f' :: Included Extensions :: \n {red}{excluded_extension}{reset}')
+        print(f' :: Included Extensions :: \n {red}{included_extension}{reset}')
         print('\t\t', included_extension), print()
 
 
@@ -419,9 +479,14 @@ class change_info():
             files_include = [f for f in files if not re.match(includes, f)]
             print(f' ** Excludes Files ** \n {red}{files_exclude}{reset}')
 
-        regex_included_extension =
-        regex_excluded_extension =
+        regex_included_extension = regex_inclusions(included_extension)
+       # print_inclusions =
+        regex_excluded_extension = regex_exclusions(excluded_extension)
 
+        print(f'{yellow}** Regexed Included Extensinos}{reset}')
+        print(f'{bblue} ** {regex_included_extension} ** {reset}')
+        print(f'{yellow}** Regexed Excluded Extensinos}{reset}')
+        print(f'{bblue} ** {regex_excluded_extension} ** {reset}')
         ## start of globbing
         ## get ext from included extensions,
         ## parse path to globber with ext
@@ -438,27 +503,64 @@ class change_info():
         ## exclude files ---> dirs
 
     def display_all_folders(self, p):
-        for root, dirs, files in os.walk(p):
-            print(root + dirs)
+        print('X' * 50)
+        print(f'Displaying All Folders for \n \t\t {yellow} {p} {reset} \n \t\t {yellow} {self.CURRENT_CLOCK} {reset}')
+        for root, dirs, files in os.walk(p, ):
+            folder_list = root + dirs
+            print(f'{yellow} :: Folders Found :: {reset } \n {root} + {dirs} + {files})
             pass
 
-    ### FINISH THIS
-    def get_fileByname(self, include_extension, exclude_extension):
-        # glob.isglob to find all files recursivly
-        for root, dirs, files in os.walk(p):
-            files = [os.path.join(root, f) for f in files]
             #  files_exclude = [f for f in files if not re.match(excludes, f)]
             #  files_include = [f for f in files if not re.match(includes, f)]
             # print(f' ** Excludes Files ** \n {red}{files_exclude}{reset}')
-            print(f' ** Excludes Files ** \n {red}{files}{reset}')
-
-            return f'files_exclude ** \n {files_include} **'
 
 
-    ## exclude files ---> dirs
+
+    ### FINISH THIS
+
+    # TO GET FILE BY NAME
+    def get_fileByname(self, p, file_name):
+        # glob.isglob to find all files recursivly
+        file_counter = 0
+        ## try both isfile() and exists ##
+        for root, dirs, files in tqdm(os.walk(p)):
+            if file_name in files and file_name.isfile(p):
+                file_names = [os.path.join(root, f) for f in files]
+                print(
+                    f' ** Found {yellow} [{file_counter}] {reset} files with the name {yellow} [{file_name}] {reset} ** \n {red}{files}{reset}')
+                print(f'{file_names}')
+            file_counter += 1
+        return file_names
+          #  return f'files_exclude ** \n {files_include} **'
+
+    ## FINISH THIS
+    # TO GET FILE BY FOLDER
+    def get_fileByfolder(self, p, folder_name):
+        # glob.isglob to find all files recursivly
+        folder_counter = 0
+        ## try both isfile() and exists ##
+        for root, dirs, files in os.walk(p, topdown=False, followlinks=True):
+            if (folder_name in dirs) and (file_name.isdirs(p)):
+                folder_names = [os.path.join(dirs, f) for f in files]
+            folder_counter += 1
+
+        print(f' ** Found {yellow} [{file_counter}] {reset} directories with the name {yellow} [{folder_name}] {reset} ** \n {red}{files}{reset}')
+        print(f'{folder_names}')
+
+        return folder_names
+          #  return f'files_exclude ** \n {files_include} **'
+
+##########################################################################################
+    ##########################################################################################
+##########################################################################################
+    ##########################################################################################
+##########################################################################################
+
+
 
     # 1
     ### may need to convert to class method for path access . if conversion, rewrite another for instance access
+    # TO FIND DUPLICATES
     def find_duplicates(self, p):
         print(f'Finding Duplicates, \n current time {self.CURRENT_CLOCK}')
         # while self.busy:  # thread t0
@@ -666,33 +768,21 @@ except Exception as f:
 
 ## or while?
 if p.exists():
-    if platform.platform() == "Linux-4.4.0-22000-Microsoft-x86_64-with-glibc2.32":
-        print('It seems you may be on Windows WSL, here is your CWD: ')
+    current_platform = platform.platform()
+    if platform.platform():# == "Linux-4.4.0-22000-Microsoft-x86_64-with-glibc2.32":
+        print(f'**It seems you may be on {yellow} {current_platform} {reset} \n {red}*The program may not work as expected if unture.{reset} ')
         # CURRENT_TIME = time.time()
         # CURRENT_CLOCK = time.ctime(CURRENT_TIME)
         # CLASS_PATH = pathlib.Path.cwd()
-        current_info_c = change_info(p)
-        # current_info00 = \
-        current_info_c.get_sys_info(p)
-        # current_info00()
-
-        ###
+        class_info = change_info(p)
         wsl_path = pathlib.Path.cwd()
-        print(f'* WSL Path {wsl_path}')
+
+        print(f'{red} {class_info.info_fromClass()}{reset}'), print()
+        print('X' * 50)
+        print(f'* :: Path from Pathlib :: \n\t {yellow} *[{wsl_path}] {reset}')
 
         print(), print()
-        # global PARENT
-        # PARENT = pathlib.Path(__file__).parent.resolve()
-        # CURRENT_USER = os.path.basename(PARENT)
-        # NORMALIZE_PATH = os.path.normpath(PARENT)
-        # REAL_PATH = os.path.realpath(PARENT)
-        # print(f'* Path Object (p) {p}')
-        #
-        # print(f'* WSL Path {wsl_path}')
-        # print(f'* Current User: {CURRENT_USER}')
-        # print(f'* Parent Directory {PARENT}')
-        # print(f"* Normalized Path {NORMALIZE_PATH}")
-        # print(f"* Real Path {REAL_PATH}")
+
 
         try:
             fail_tick = 0
@@ -712,8 +802,10 @@ if p.exists():
                     print(f':: {bblue} {dirs}{reset} ::')
                     print('X' * 25)
                     ## WRITE DIR TO .TXT ##
-                    dir_write_check = change_info.write_info(dirs)
-                    print(dir_write_check)
+                    dir_stat = os.stat(p)
+                    dir_write_check = change_info.write_info(f'** dirs {dirs}')
+                    dir_write_stat = change_info.write_info(f'** dir_stat {dir_stat}')
+                    print('** Directory Write Check ', dir_write_check)
                     ## SUB DIRECTORIES ##
                     print(), print()
                     print(f'{blue} :: Sub-Directories :: {reset}')
@@ -721,6 +813,8 @@ if p.exists():
                     subdirs = [x for x in p.iterdir() if x.is_dir()]
                     subdirs.sort()
                     pprint.pprint(subdirs)
+
+
                     print('X' * 50)
                     print(f'{bblue} :: {subdirs} :: {reset}'), print()
 
@@ -730,8 +824,15 @@ if p.exists():
                     print('X' * 25)
 
                     ### WRITE SUB DIRS TO .TXT ###
-                    file_write_check = change_info.write_info(subdirs)  ###
-                    print(file_write_check)
+                    ## Navigate Path object to sub dir, then print stats.
+                    # 
+                    fileSubs_stat = os.stat(subdirs)
+
+                    fileSubs_write_check = change_info.write_info(subdirs)  ### write the sub dir
+                    subDir_write_check = change_info.write_info(f'** Sub-Dirs {subdirs}')
+                    subDir_write_stat = change_info.write_info(f'** Sub-Dir-Stats {dir_stat}')
+
+                    print(fileSubs_write_check)
                     if file_write_check:
                         print(f'{bblue} : Successfully Wrote Sub-Dirs to .txt : {reset}')
                     file_choices = ['1', '[1]', 'files', 1]
