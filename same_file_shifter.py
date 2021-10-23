@@ -236,29 +236,204 @@ class change_info():
 
     @staticmethod
     def regex_exclusions():
-        inclusions = r'|'.join
+        inclusions = []
         exclusions =
 
         return inclusions, exclusions
     def display_all_files(self, p):
+        no_append = ['none','n', 'no', 'c','cancel']
         path_str = str(p)  ### <--- may have to do that weird object thing
-        excludes = [path_str]
-        includes = ['.txt', '.iso', '.doc', '.rar', '.tar', '.odt', '']  ## might have to take out '', it could pull in folders
-        Includes = regex_exclusions()
+        exclude_extension = [path_str]
+        include_extension = ['.txt', '.iso', '.doc', '.rar', '.tar', '.odt', '']  ## might have to take out '', it could pull in folders
+        re_include, re_exclude = regex_exclusions()
+        print(f' :: Exclusion list, after being parsed thru glob converter :: ')
+        print(f' :: \t\t RE_INCLUDE \t\t\t  RE_EXCLUDE:: ')
+        print(f' :: {re_include} parsed thru glob converter :: ')
+
 
 
         print(f'Finding All Folders, \n in {bblue}{p}{reset} \n current time {yellow}{self.CURRENT_CLOCK}{reset}')
         print(f'Finding All Files, \n current time {self.CURRENT_CLOCK}')
-        print(f'** Enter the Extension You are looking For :: ')
-        include_inSearch =
+        ## glob.glob to print all files
+        print(f'** Enter the Extension You are looking For ** ')
+        # if input has . in it add to list, if no . start, restart recursion
+        print('X' * 30)
+        print(f'{blue} list for os.walk {reset}')
+        print(f'{blue}|| -- root--  || -- dirs -- || -- files -- || {reset}'.center(width))
         for root, dirs, files in os.walk(p):
-            files = [os.path.join(root, f) for f in files]
-          #  files_exclude = [f for f in files if not re.match(excludes, f)]
-          #  files_include = [f for f in files if not re.match(includes, f)]
-            #print(f' ** Excludes Files ** \n {red}{files_exclude}{reset}')
-            print(f' ** Excludes Files ** \n {red}{files}{reset}')
+            print(f'{bblue}{root}, || {dirs} || {files}{reset}')
 
-            return f'files_exclude ** \n {files_include} **'
+        print(), print()
+        print('x' * 50)
+        print(f'{blue}** list for glob.glob() {reset}')
+        for extension in include_extension:
+            globbed_files = glob.glob(p, f'*.{extension}"')
+            print(f'{blue} :: {globbed_files} :: {reset}')
+
+        print(f'**Would you like to search For specific files or file-extensions? \n'
+              f'\t\t{yellow}[Key]{reset} files= files, f, names, by name\n',
+              f'\t\t{yellow}[Key]{reset} [file-extensions= f, fileext, file ext, ext]')
+
+        search_name_A = ['name', 'file name', 'n', 'N', 'NAME']
+        search_ext_A = ['file-extensions', 'extension' 'fileext', 'file ext', 'ext', 'fe',]
+        exit_loops = ['e','E','Exit','EXIT', 'q','Q','quit','QUIT']
+        search_fileQ = input('** ')
+
+        if search_fileQ in search_ext_A: ## if user wants to search by file name
+            print('X' * 50)
+            print(f' Add the extensions you would like to search for. {yellow}[20 MAX]{reset}',
+                  f" to exit extension chooser, enter {yellow} ['q'] {reset} or {yellow} ['quit']{reset}")
+            while True:
+                ticktick = 0
+                add_extension = input('** ')
+                print()
+                if add_extension in exit_loops:
+                    parsed_extensions = change_info.getByext(add_extension)
+                    print(parsed_extensions)
+                    break
+                if add_extension in no_append:
+                    parsed_extensions = change_info.getByext(add_extension)
+                    print(parsed_extensions)
+                    break
+                if add_extension[-1] == '.': ## continue adding to list--> look for flag to break
+                    Flag = True
+                    while Flag:
+                        include_extension.append(str(search))
+                        print()
+                        print('X' * 50)
+                        print(f':: Extensions that will be included in the search :: \n {"X"*35} \n\t\t {yellow} {include_extension} {reset}')
+                        print(f'{red} :: Use The Exit Keys to Leave Input Loop :: {reset}')
+                        continue
+                    if ticktick == 20:
+                        print('X' * 50)
+                        print(f'{red} Limit Reached. {reset} Moving on to parse search.')
+                        print(f':: Extensions that will be included in the search :: \n {"X"*35} \n\t\t {yellow} {include_extension} {reset}')
+                        parsed_extensions = change_info.getByext(add_extension)
+                        print('**Parsed Extensions')
+                        print('*', parsed_extensions)
+                        return parsed_extensions
+                    if add_extension in exit_loops:
+                        print('X' * 50)
+                        print(f'{red} User Keyed Exit. {reset} Moving on to parse search.')
+                        print(f':: Extensions that will be included in the search :: \n {"X"*35} \n\t\t {yellow} {include_extension} {reset}')
+                        parsed_extensions = change_info.getByext(add_extension)
+                        print('**Parsed Extensions')
+                        print('*', parsed_extensions)
+                        return parsed_extensions
+                    continue
+                else:
+                    ticktick += 1
+                    print(f' {red} :: Invalid Extension Choice, {reset}')
+                    print(f' :: You have {red} [{5 - ticktick}]  {reset} times to get it right ')
+                    if ticktick == 4:
+                        break
+                    continue
+
+        if search_fileQ in search_ext_B:
+            file_name_return = []
+            print('X' * 50)
+            print(f'** Enter the file name paramaters that you would like to search for. \n *{yellow} MAX_LEN = [512] {reset}',
+                  f" To exit search by file name, enter {yellow} ['q'] {reset} or {yellow} ['quit']{reset}")
+            print(f"{red} You can exit input and parse the search values by entering {yellow}  ['e'] {reset} , or {yellow} ['exit'] {reset} at anytime. ")
+            while True:
+                if seach_fileQ in exit_loops:
+                    print(f'{red}** Sys.exit, user-specified. {reset}')
+                    print(
+                        f':: Extensions that will be included in the search :: \n {"X" * 35} \n\t\t {yellow} {include_extension} {reset}')
+                    specified_files = change_info.get_fileByname(file_name_return)
+                    print(specified_files)
+                    #return specified_files
+
+                ticktick = 0
+                add_name = input('** ')
+                print()
+                if not add_name:
+                    print('X' * 50)
+                    print(f'{red}**A specefic name was not specified, parsing ALL available values. (may take some time.){reset}')
+                    print(file_name_return)
+                    print('X' * 50)
+                    specified_files = change_info.get_fileByname(file_name_return)
+                    print(specified_files)
+                    return specified_files
+                   # break
+                if add_name in no_append:
+                    print('X' * 50)
+                    print(f'{red}**A specified name has an error, parsing ALL available values. (may take some time.){reset}')
+                    print(file_name_return)
+                    print('X' * 50)
+                    specified_files = change_info.get_fileByname(file_name_return)
+                    print(specified_files)
+                    return specified_files
+                    #break
+                if add_name:
+                    print('X' * 50)
+                    add_name = str(add_name)
+                    file_name_return.append(str(add_name))
+                    print(f'{bblue} :: You added ::{reset}')
+                    print(f'{yellow}** {file_name_return} {reset}')
+                    print('X' * 50)
+                    specified_files = change_info.get_fileByname(file_name_return)
+
+                    continue
+                elif ticktick == 20:
+                    break
+                else:
+                    ticktick += 1
+                    print(f' {red} :: Invalid Extension Choice, {reset}')
+                    print(f' :: You have {red} [{5 - ticktick}]  {reset} times to get it right ')
+                    if ticktick == 4:
+                        break
+                    continue
+
+
+            print(f'**{bblue} moving on to extract filenames. {reset} \n ',
+                  f'{yellow} {include_extension} {reset} \n ',
+                  f'{"x" * 50}')
+            print(f'** {bblue} File Extensions that will be omitted {reset} \n',
+                f'{red}{exclude_extension}{reset}')
+            specified_files = change_info.get_fileByext(p, include_extension, exclude_extension)
+            print(), print()
+
+      ### create new func to find specific files
+       # searchFlag = True
+    ## FINISH THIS
+    ## use os.walk and glob ##
+    def get_fileByext(self, included_extension, excluded_extension): # might be able to remove positional params
+        print('X' * 50)
+        print(f' :: Excludes Extensions :: \n {red}{excluded_extension}{reset}')
+        print('\t\t', excluded_extension), print()
+        print('X' * 50)
+        print(f' :: Included Extensions :: \n {red}{excluded_extension}{reset}')
+        print('\t\t', included_extension), print()
+
+
+        ## add ** for globber, may need to shift down a few lines
+        print(f'{yellow}** Adding [**] to extension for globber{reset}')
+        included_extension = ['**' + included_extension for _ in include_extensions]
+        ### start of os.walk
+        print('X' * 50)
+        for root, dirs, files in os.walk(p, followlinks=True):
+            files = [os.path.join(root, f) for f in files]
+            print(files)
+            files_exclude = [f for f in files if not re.match(excludes, f)]
+            files_include = [f for f in files if not re.match(includes, f)]
+            print(f' ** Excludes Files ** \n {red}{files_exclude}{reset}')
+
+        regex_included_extension =
+        regex_excluded_extension =
+
+        ## start of globbing
+        ## get ext from included extensions,
+        ## parse path to globber with ext
+        ## MAY HAVE TO FSTRING / REGEX THE p OBJECT (PATH)
+        for ext in included_extension:
+            for file in glob.glob(f"{p}**{ext}", recursive = True):
+                print(file)
+
+
+
+        #return f'files_exclude ** \n {files_include} **'
+
 
         ## exclude files ---> dirs
 
@@ -266,6 +441,21 @@ class change_info():
         for root, dirs, files in os.walk(p):
             print(root + dirs)
             pass
+
+    ### FINISH THIS
+    def get_fileByname(self, include_extension, exclude_extension):
+        # glob.isglob to find all files recursivly
+        for root, dirs, files in os.walk(p):
+            files = [os.path.join(root, f) for f in files]
+            #  files_exclude = [f for f in files if not re.match(excludes, f)]
+            #  files_include = [f for f in files if not re.match(includes, f)]
+            # print(f' ** Excludes Files ** \n {red}{files_exclude}{reset}')
+            print(f' ** Excludes Files ** \n {red}{files}{reset}')
+
+            return f'files_exclude ** \n {files_include} **'
+
+
+    ## exclude files ---> dirs
 
     # 1
     ### may need to convert to class method for path access . if conversion, rewrite another for instance access
@@ -419,6 +609,7 @@ except Exception as E:
     traceback.print_exc()
     print(str(E))
 
+# global answer_00, answer_01, starting_path
 starting_path = os.getcwd()
 answer_00 = ['yes', 'Yes', 'YES', 'y', 'Y']
 answer_01 = ['No', 'NO', 'n', 'no', 'N']
@@ -510,12 +701,16 @@ if p.exists():
                 question_input = input('')
                 if question_input in answer_00:
                     ## DIRECTORIES ##
-                    print(f'{blue} :: Directories :: {reset}')
-                    print('X' * 25)
 
                     dirs = os.listdir()
                     dirs.sort()
+                    print(f'{blue} :: Directories :: {reset}')
+                    print('X' * 25)
                     pprint.pprint(dirs)
+
+                    print(f'{blue} :: Directories :: {reset}')
+                    print(f':: {bblue} {dirs}{reset} ::')
+                    print('X' * 25)
                     ## WRITE DIR TO .TXT ##
                     dir_write_check = change_info.write_info(dirs)
                     print(dir_write_check)
@@ -525,7 +720,14 @@ if p.exists():
                     print('X' * 25)
                     subdirs = [x for x in p.iterdir() if x.is_dir()]
                     subdirs.sort()
-                    print(f'{bblue} :: {subdirs} :: {reset}')
+                    pprint.pprint(subdirs)
+                    print('X' * 50)
+                    print(f'{bblue} :: {subdirs} :: {reset}'), print()
+
+                    print('X' * 50)
+                    print(f'{red} :: Directories :: {reset}')
+                    print(f':: {red} {dirs}{reset} ::')
+                    print('X' * 25)
 
                     ### WRITE SUB DIRS TO .TXT ###
                     file_write_check = change_info.write_info(subdirs)  ###
@@ -610,11 +812,12 @@ if p.exists():
                         with Spinner():
                             print(f'** {bblue}initiating find_duplicates sequence {reset}')
                             find_duplicates = folder_00.find_duplicates(p)
-                            x = f'{red} add amt of duplicaters {reset}'
-                            print(f'** System found {x} {find_duplicates}')
+                            x = f'{red} {find_duplicates} {reset}'
+                            pprint.pprint(find_duplicates)
+                            print(f'** System found {yellow}[{x}]{reset} duplicates{red}{find_duplicates} {reset}')
 
                 elif question_input in answer_01:
-                    print(' ## Saving Directory Contents to Dict ##')
+                    print(' ## Saving Directory Contents to txt ##')
                     break
                 else:
                     sys_exit = 3 - fail_tick
