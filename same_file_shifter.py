@@ -8,10 +8,10 @@ import IPCHECKER as IPx
 from IPCHECKER import *
 from subprocess import call
 
+
 class Spinner:
     busy = False
     delay = 0.1
-
     @staticmethod
     def spinning_cursor():
         while 1:
@@ -72,19 +72,16 @@ class Colors:
     fgBrightBlue = "\033[34;1m"
     bgBlue = "\033[44m"
     bgBrightBlue = "\033[44;1m"
-
     # Magenta
     fgMagenta = "\033[35m"
     fgBrightMagenta = "\033[35;1m"
     bgMagenta = "\033[45m"
     bgBrightMagenta = "\033[45;1m"
-
     # Cyan
     fgCyan = "\033[36m"
     fgBrightCyan = "\033[36;1m"
     bgCyan = "\033[46m"
     bgBrightCyan = "\033[46;1m"
-
     # White
     fgWhite = "\033[37m"
     fgBrightWhite = "\033[37;1m"
@@ -271,13 +268,10 @@ class change_info():
         no_append = ['none','n', 'no', 'c','cancel']
         path_str = str(p)  ### <--- may have to do that weird object thing
         exclude_extension = [path_str]
-        include_extension = ['.txt', '.iso', '.doc', '.rar', '.tar', '.odt', '']  ## might have to take out '', it could pull in folders
-        re_include, re_exclude = regex_exclusions()
+        include_extension = ['.txt', '.iso', '.doc', '.rar', '.tar', '.odt', '.gz']  ## might have to take out '', it could pull in folders
         print(f' :: Exclusion list, after being parsed thru glob converter :: ')
         print(f' :: \t\t RE_INCLUDE \t\t\t  RE_EXCLUDE:: ')
         print(f' :: {re_include} parsed thru glob converter :: ')
-
-
 
         print(f'Finding All Folders, \n in {bblue}{p}{reset} \n current time {yellow}{self.CURRENT_CLOCK}{reset}')
         print(f'Finding All Files, \n current time {self.CURRENT_CLOCK}')
@@ -294,8 +288,15 @@ class change_info():
         print('x' * 50)
         print(f'{blue}** list for glob.glob() {reset}')
         for extension in include_extension:
-            globbed_files = glob.glob(p, f'*.{extension}"')
+            globbed_files = glob.glob(p, f"**\**.{extension}") ## use '**' for recursiver search
             print(f'{blue} :: {globbed_files} :: {reset}')
+            write_glob = get_info.subDir_write(globbed_files)
+            write_globStat = get_info.subDir_write_stat(os.stat(globbed_files))
+            print(f'glob {write_glob}')
+            print(f'write_globStat {write_globStat}')
+
+
+
 
         print(f'**Would you like to search For specific files or file-extensions? \n'
               f'\t\t{yellow}[Key]{reset} files= files, f, names, by name\n',
@@ -308,6 +309,8 @@ class change_info():
 
 
         ### 01 ### START SEQUENCE TO PARSE BY EXTENSION
+        re_exclude = regex_exclude(exclude_extension)
+        print(f'**Excluded Extensions \n *{re_exclude}')
         if search_fileQ in search_ext_A: ## if user wants to search by file name
             print('X' * 50)
             print(f' Add the extensions you would like to search for. {yellow}[20 MAX]{reset}',
@@ -329,7 +332,10 @@ class change_info():
                     while Flag:
                         include_extension.append(str(search))
                         input_extensions = change_info.getByext(add_extension)
-                        print(input_extenions)
+                        re_include = regex_inclusions(input_extensions)
+
+                        print(f'Regex Conversion: \n {re_include}')
+                        print(input_extensions)
 
                         print()
                         print('X' * 50)
@@ -470,9 +476,9 @@ class change_info():
        # print_inclusions =
         regex_excluded_extension = regex_exclusions(excluded_extension)
 
-        print(f'{yellow}** Regexed Included Extensinos}{reset}')
+        print(f'{yellow}** Regexed Included {Extensinos}{reset}')
         print(f'{bblue} ** {regex_included_extension} ** {reset}')
-        print(f'{yellow}** Regexed Excluded Extensinos}{reset}')
+        print(f'{yellow}** Regexed Excluded Extensinos  {reset}')
         print(f'{bblue} ** {regex_excluded_extension} ** {reset}')
         ## start of globbing
         ## get ext from included extensions,
@@ -494,7 +500,7 @@ class change_info():
         print(f'Displaying All Folders for \n \t\t {yellow} {p} {reset} \n \t\t {yellow} {self.CURRENT_CLOCK} {reset}')
         for root, dirs, files in os.walk(p, ):
             folder_list = root + dirs
-            print(f'{yellow} :: Folders Found :: {reset } \n {root} + {dirs} + {files})
+            print(f'{yellow} :: Folders Found :: {reset } \n {root} + {dirs} + {files}')
             pass
 
             #  files_exclude = [f for f in files if not re.match(excludes, f)]
@@ -867,7 +873,7 @@ try:
         elif os.access(p, os.W_OK):
             print(f'{red}** Path Is Not Writable \n[PATH]*[{p}] {reset}')
             break
-            
+
 except OSError as ose:
     traceback.print_exc()
     print(str(ose))
