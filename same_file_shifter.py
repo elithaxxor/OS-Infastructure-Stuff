@@ -1,5 +1,5 @@
 import fnmatch
-import traceback, logging, sys, asyncio, random, platform, os, os.path, threading
+import traceback, logging, sys, asyncio, random, platform, os, os.path, threading, subprocess
 import rich, pprint, os.path, time, shutil, pathlib, ctypes, glob, re
 import IPCHECKER as IPx
 from tqdm import tqdm
@@ -181,6 +181,7 @@ class change_info():
         self.cwd = os.getcwd()
         self.current_time = time.time()
         self.current_clock = time.ctime(self.current_time)
+        self.class_parent = pathlib.Path(__file__).parent.resolve()  ##
 
     @classmethod  ## will print the class location, without (p) PATH object declared in functional portion
     def info_fromClass(cls):
@@ -257,6 +258,12 @@ class change_info():
             print(str(E))
             return str(E)
 
+
+    def getParentDirectoryFromFile(self, absolutePathToFile):
+        splitResutsFromZeroToNMinus1 = absolutePathToFile.split(os.sep)[:-1]
+        pprint.pprint(splitResutsFromZeroToNMinus1)
+        return f'** {yellow}file found in {reset} \n {os.sep.join(splitResutsFromZeroToNMinus1)}'
+
     @staticmethod
     def write_wild(info0):
         try:
@@ -285,7 +292,7 @@ class change_info():
 
     ## regex inclusions to return fnmatch.translate for include/exclude filesystems ##
     @staticmethod
-    def regex_inclusions(*args, **kwargs):
+    def regex_inclusions(*args):
         inclusions = r'|'.join([fnmatch.translate(x) for x in args])
         return inclusions
 
@@ -336,6 +343,8 @@ class change_info():
             write_osWalk = change_info.write_specific_info(os.stat(p))
             print(f'write_osWalk :: {write_osWalk}')
             print('HELLUVASTRING : ', helluvaString)
+            os_walk_parent = get_info.getParentDirectoryFromFile(dirs)
+            print('File found in :: \n class_info.getParent')
 
         print(), print()
         print('x' * 50)
@@ -353,6 +362,20 @@ class change_info():
         str_p = str_p + f'**/**'
         print('string_p', str_p)
 
+        for root, dirs, files in os.walk(self.p, followlinks=True):
+            files = [os.path.join(root, f) for f in files]
+            print()
+            print(f'{yellow} :: root :: {reset}')
+            print(root)
+            print('X' * 50)
+            print(f'{yellow} :: dirs :: {reset}')
+            print(dirs)
+            print()
+            print('X' * 50)
+            print(f'{yellow} :: files :: {reset}')
+            print(files)
+            print()
+
         str_parent = str_p
         # str_parent = get_info.regexParent(str_parent) ## to possibly regex // explore other options
 
@@ -361,15 +384,21 @@ class change_info():
             pprint.pprint(globbed_files00)
             print(f'{yellow}globbed_files{reset}')
             print(f'{blue}{globbed_files00}{reset}')
+            globbed_parent = get_info.getParentDirectoryFromFile(str_p)
+            print(f' :: {yellow} Found File in :: {reset}\n {globbed_parent}')
 
         for globbed_files01 in glob.glob(str_parent, recursive=True):
             pprint.pprint(globbed_files01)
             print(f'{yellow} globbed_files01 {reset}')
             print(f'{blue} {globbed_files01} {reset}')
+            globbed_parent01 = get_info.getParentDirectoryFromFile(str_p)
+            print(f' :: {yellow} Found File in :: {reset}\n {globbed_parent01}')
 
         for globbed_files02 in glob.glob(f'/{str_p}*[0-9].*', recursive=True):
             print(f'{yellow} globbed_files02 {reset}')
             print(f'{blue} {globbed_files02} {reset}')
+            globbed_parent02 = get_info.getParentDirectoryFromFile(str_p)
+            print(f' :: {yellow} Found File in :: {reset}\n {globbed_parent02}')
 
         # glob.glob(p, recursive=True)  ## use '**' for recursiver search
         # print(f'{yellow} :: {globbed_files} :: {reset}')
@@ -419,12 +448,23 @@ class change_info():
                     Flag = True
                     while Flag:
                         include_extension.append(str(add_extension))
-
                         input_extensions = change_info.get_fileByext(self, exclude_extension, add_extension)
-                        print(input_extensions)
+                        if input_extensions:
+                            yes_key00 = ['Yes', 'yes', 'Y', 'y', '']
+                            no_key00 = ['No', 'no', 'n', 'N']
+                            print(f'{yellow}**Would you like to continue adding extensions? [Y/N] ')
+                            print(f"yes_key00 = ['Yes', 'yes', 'Y', 'y']")
+                            print(f"no_key00 = ['No', 'no', 'n', 'N']")
+                            break_out = input('** ')
+                            if yes_key00 in break_out:
+                                continue
+                            elif no_key00 in break_out:
+                                return f'{red} Exiting Display Files Sequence... {reset}'
+
+
+                            return f'{yellow} '
                         re_include = get_info.regex_inclusions(input_extensions)
-                        print(f'Regex Conversion: \n {re_include}')
-                        print(input_extensions)
+                        print(f' :: Current Extensions :: \n{yellow}{input_extensions}{reset}')
                         print()
                         print('X' * 50)
                         print(
@@ -516,7 +556,7 @@ class change_info():
                               f'{yellow} {exit_loops}{reset}')
                         print(f'{bblue} :: Files specified by name :: {reset}')
                         print(specified_files)
-                        saved_specified_files = class_info.write_specified_info(specified_files)
+                        saved_specified_files = get_info.write_specified_info(specified_files)
                         print(f'{red} Saved search [File-Search-byName] {reset}')
                         print(saved_specified_files)
 
@@ -542,7 +582,7 @@ class change_info():
 
             specified_files = change_info.get_fileByext(p, include_extension, exclude_extension)
             if specified_files:
-                #  re_exclude = class_info.regex_exclude(exclude_extension)
+                print(specified_files)
                 print(f'**Excluded Extensions \n *{re_exclude}')
 
             print(), print()
@@ -551,6 +591,7 @@ class change_info():
 
     def get_fileByext(self, excluded_extension, included_extension):  # might be able to remove positional params
 
+        global wild_list
         print('X' * 50)
         print(
             f' Parsing Inclusin/Exclusion List.. \n Current Time :: (Self from class) {yellow}  [{self.CURRENT_CLOCK}] {reset}')
@@ -590,35 +631,122 @@ class change_info():
 
         str_p = self.p
         str_p = str(str_p)
+        included_extension_str = str(included_extension)
+        included_extensions = ['**' + included_extension_str for _ in included_extension]
+        print(included_extensions)
+        regex_included_extension = get_info.regex_inclusions(included_extension)
+        #  regex_excluded_extension = get_info.regex_exclusions(excluded_extension)
+        print(f'{yellow}** Regexed Included {regex_included_extension}{reset}')
+        print(f'{bblue} ** {regex_included_extension} ** {reset}')
+        print(f'{yellow}** Regexed Excluded Extensions {excluded_extension}  {reset}')
 
+        ### PRINT ALL FILES FOR REVIEW
+        print('X' * 50)
+        print(f' :: {yellow} These are the extensions included for your search  {reset} :: ',
+                f'\n{blue} [{included_extension}]{reset}'
+                f'\n{blue} [{self.CLASS_PATH}]{reset}')
+
+
+        print(f' :: {yellow} PRINTING ALL FILES FOR REVIEW  {reset} :: ')
+
+
+        print(f'{blue}[{self.CURRENT_CLOCK}]{reset}')
+        print('X' * 50)
+        for root, dirs, files in os.walk(self.p, followlinks=True):
+            files = [os.path.join(root, f) for f in files]
+            print()
+            print(f'{yellow} :: root :: {reset}')
+            print(root)
+            print('X' * 50)
+            print(f'{yellow} :: dirs :: {reset}')
+            print(dirs)
+            print()
+            print('X' * 50)
+            print(f'{yellow} :: files :: {reset}')
+            print(files)
+            print()
+            # files_exclude = [f for f in files if not re.match(included_extension, f)]
+            # files_include01 = [f for f in dirs if re.match(included_extension, f)]
+            # files_include02 = [f for f in root if re.match(included_extension, f)]
+            # print(f'{yellow} ** Root ** {reset} \n {bblue} :: {files_exclude} :: {reset}')
+            # print('X' * 50)
+            # print(f'{yellow} ** Dirs ** {reset}\n {bblue} :: {files_include01} :: {reset}')
+            # print('X' * 50)
+            # print(f'{yellow} ** Files ** \n {reset}{bblue} :: {files_include02} :: {reset}')
+            # print('X' * 50)
+            # print(f'{yellow} ** Excludes Files ** {reset}\n {yellow}{excluded_extension}{reset}')
+
+        print(), print()
+        print('X' * 50)
+
+
+        ### ALL INFORMATION FROM SUBDIR AND DIR ###
+        print(f'({yellow}**Printing dir and subdir files{reset}')
+        for extension in included_extension:
+            print(f'{yellow} Extensions From The LIst.  {reset} \n {bblue} {extension} {reset}')
+            str_p = str(p)
+            str_p = str_p + f'**/**'
+            print('string_p', str_p)
+            globbed_files = glob.glob(str_p, recursive=True)  ## use '**' for recursiver search
+            print(globbed_files)
+            globbed_files = glob.glob(str_p)  ## use '**' for recursiver search
+            print(f'{blue} :: {globbed_files} :: {reset}')
+            write_glob = change_info.write_specific_info(globbed_files)
+            write_globStat = change_info.write_specific_info(os.stat(p))
+            print(f'glob {write_glob}')
+         #   print(f'write_globStat {write_globStat}'), print(), print()
+            print('X' * 50)
+
+
+        print(f' :: {yellow} PRINTING FILES IN CWD {reset} :: ')
+
+        wild_list = []
+        ### TO FIND FILES IN DIR
         for wild in included_extension:
+            wild_folder = wild
             time.sleep(.1)
             #  print(wild)
             wild = '**' + wild
             print('X' * 50)
             print(f'**{yellow}Parsing{reset} :: {bblue}[{wild}]{reset}')
             def_files = glob.glob(os.path.join(self.p, wild), recursive=True)
+            wild_list = wild_list.append(def_files)
             pprint.pprint(def_files)
             print('X' * 50)
             print()
             print(f'{yellow}[{def_files}]{reset}')  # add_extension
             print()
             print('X' * 50)
+            print(f'**{yellow}Parsing{reset} :: {bblue}[{wild}]{reset}')
+            print(f'{yellow}:: Dir the Folder was Found IN{reset}')
+            wild_dir = get_info.getParentDirectoryFromFile(wild_folder)
+            print(wild_dir)
+            print('X' * 50)
+            print(f'{yellow} :: list of whats found in dir ::\n{wild_list}')
             write_glob00 = change_info.write_specific_info(def_files)
             print(write_glob00)
             write_globStat00 = change_info.write_specific_info(os.stat(str_p))
             print(write_globStat00)
+            print(f'{yellow}**Finished globbing at-PATH{reset} \n*{self.CURRENT_CLOCK}')
             print()
             print('X' * 50)
 
+
+
         print('X' * 50)
         print('X' * 50)
         print('X' * 50)
+        print(f'{yellow}**CLASS-PARENT{reset} \n*{self.CLASS_PARENT}')
+        print(f'{yellow}**CLASS-PATH{reset} \n*{self.CLASS_PARENT}')
 
         ### THIS PRINTS THE SUB FILES FOUND IN SUB-DIRCTORIES
+        print('X'* 50)
+        print(f' :: {yellow} PRINTING FILES IN SUB-DIRS {reset} :: ')
+
+        subdir_list = []
         for wild_deep in included_extension:
             time.sleep(.1)
-            wild_deep = '*' + wild_deep
+            wild_deep = '**' + wild_deep
             str_p = '**' + str(self.p)
             print(f'{yellow}**New dir to be parsed :: {reset} :: [{str_p}]')
             print(f'{yellow}**Ext to be parsed :: {reset} :: [{wild_deep}]')
@@ -626,6 +754,7 @@ class change_info():
                 print(f'{yellow}**Current Ext {reset}:: {reset}{bblue} [{wild_deep}] {reset}')
                 print(f'{yellow}**path.name {reset}:: {reset}{bblue} [{path.name}] {reset}')
                 def_files00 = glob.glob(os.path.join(self.p, wild_deep), recursive=True)
+                subdir_list.append(path.name)
                 print('X' * 50)
                 pprint.pprint(def_files00)
                 print('X' * 50)
@@ -640,53 +769,83 @@ class change_info():
                 print(write_globStat01)
                 if write_glob01:
                     print(f'{yellow}**Globbed Files Written to Globstat.txt{reset}')
+                    print(f'{yellow} :: list of whats found in dir :: {reset}\n{bblue}{subdir_list} {reset}')
                 else:
-                    print(f'{red}**Write Failure for globtest')
+                    print(f'{red}**Write Failure for globtest{reset}')
 
-
-        for extension in included_extension:
-            print(f'{yellow} Extensions From The LIst.  {reset} \n {bblue} {extension} {reset}')
-            str_p = str(p)
-            str_p = str_p + f'**/**'
-            print('string_p', str_p)
-            globbed_files = glob.glob(str_p, recursive=True)  ## use '**' for recursiver search
-            print(globbed_files)
-
-            globbed_files = glob.glob(str_p)  ## use '**' for recursiver search
-            print(f'{blue} :: {globbed_files} :: {reset}')
-            write_glob = change_info.write_specific_info(globbed_files)
-            write_globStat = change_info.write_specific_info(os.stat(p))
-            print(f'glob {write_glob}')
-            print(f'write_globStat {write_globStat}'), print(), print()
-            print('X' * 50)
-
-
-        #  included_extensions = ['**' + included_extension for _ in included_extension]
-        #    included_extensions = ['**' + included_extension for _ in included_extension]
-        # print(included_extensions)
-
-        regex_included_extension = get_info.regex_inclusions(included_extension)
-        #  regex_excluded_extension = get_info.regex_exclusions(excluded_extension)
-        print(f'{yellow}** Regexed Included {regex_included_extension}{reset}')
-        print(f'{bblue} ** {regex_included_extension} ** {reset}')
-        print(f'{yellow}** Regexed Excluded Extensions {excluded_extension}  {reset}')
-       # print(f'{bblue} ** {regex_excluded_extension} ** {reset}')
-       #
-       #  for ext in included_extension:
-       #      for file in glob.glob(f"{p}**{ext}", recursive=True):
-       #          print(file)
-        ### start of os.walk
         print('X' * 50)
-        for root, dirs, files in os.walk(p, followlinks=True):
-            files = [os.path.join(root, f) for f in files]
-            print(files)
-            files_exclude = [f for f in files if not re.match(excludes, f)]
-            files_include = [f for f in files if not re.match(includes, f)]
-            print(f' ** Excludes Files ** \n {red}{files_exclude}{reset}')
+        print('X' * 50)
+        print('X' * 50)
+        print('X' * 50)
+        print('X' * 50)
+        print('X' * 50)
+        print('X' * 50)
 
-        # return f'files_exclude ** \n {files_include} **'
 
-        ## exclude files ---> dirs
+
+        print(f'**Search whole subsystem for ext Y/N {red}(may take a while){reset}')
+        print(f'*Key {yellow}[Yes, yes, Y, y, No, no, n, N){reset}')
+        yes_key = ['Yes', 'yes', 'Y', 'y']
+        no_key = ['No', 'no', 'n', 'N']
+        search_subSys = input('**')
+        if search_subSys in yes_key:
+            all_parent_file = []
+            parent = pathlib.PurePath('/')
+            find_all_p: str = '**' + str(parent) + "**"
+            print(type(find_all_p))
+            print(f'{yellow}Processing information on [PARENT]** {reset} \n[{os.fspath(p)}]')
+            print(f' [{find_all_p}] ')
+            ### ALL INFORMATION FROM SUBDIR AND DIR ###
+            print(f'({yellow}**Printing dir and subdir files{reset}')
+
+            for extension in included_extension:
+                for path in Path(parent).rglob(find_all_p):
+                    print(f'{yellow}**Current Ext {reset}:: {reset}{bblue} [{find_all_p}] {reset}')
+                    print(f'{yellow}**path.name {reset}:: {reset}{bblue} [{path.name}] {reset}')
+                    parent_files00 = glob.glob(os.path.join(find_all_p, included_extension), recursive=True)
+                    all_parent_file.append(path.name)
+                    print('X' * 50)
+                    pprint.pprint(parent_files00)
+                    print('X' * 50)
+                    print()
+                    print(f'{yellow}**globbed-files {reset}:: {reset}{bblue} [{parent_files00}] {reset}')
+                    print('X' * 50)
+                    print()
+                    ## write files to txt ::
+                    write_parent = change_info.write_specific_info(parent_files00)
+                    print(write_parent)
+                    write_globStat01 = change_info.write_specific_info(os.stat(parent))
+                    print(write_globStat01)
+                    if write_parent:
+                        print(f'{yellow}**Globbed Files Written to Globstat.txt{reset}')
+                        print(f'{yellow} :: list of whats found in dir :: {reset}\n{bblue}{all_parent_file} {reset}')
+                    else:
+                        print(f'{red}**Write Failure for parent files {reset}')
+
+
+                print(f'{yellow} Extensions From The List.  {reset} \n {bblue} {extension} {reset}')
+                str_p = str(p)
+                str_p = str_p + f'**/**'
+                print('string_p', str_p)
+                globbed_files = glob.glob(str_p, recursive=True)  ## use '**' for recursiver search
+                print(globbed_files)
+                globbed_files = glob.glob(str_p)  ## use '**' for recursiver search
+                print(f'{blue} :: {globbed_files} :: {reset}')
+                write_glob = change_info.write_specific_info(globbed_files)
+                write_globStat = change_info.write_specific_info(os.stat(p))
+                print(f'glob {write_glob}')
+                #   print(f'write_globStat {write_globStat}'), print(), print()
+                print('X' * 50)
+                print(
+                    f'{yellow}**Starting Subsystem fileSeach on \m   {reset} {bblue}{self.p}{reset}\n{yellow}{self.CURRENT_CLOCK}  {reset}')
+
+            pass
+
+        elif search_subSys in no_key:
+            print(f'{red}**Ending Sequence {reset}')
+            return f'{yellow}**Completed Seach-By-Ext sequence{reset}\n{bblue}{self.p}{reset}\n{yellow}{self.CURRENT_CLOCK}{reset}'
+
+
 
     def display_all_folders(self, p):
         print('X' * 50)
@@ -1142,7 +1301,6 @@ if p.exists() and os.access(p, os.R_OK) and os.access(p, os.W_OK):
                 question_input = input('')
                 if question_input in answer_00:
                     ## DIRECTORIES ##
-
                     dirs = os.listdir()
                     dirs.sort()
                     print(f'{blue} :: Directories :: {reset}')
@@ -1236,9 +1394,13 @@ if p.exists() and os.access(p, os.R_OK) and os.access(p, os.W_OK):
                             display_files = file_00.display_all_files(p)
                             if display_files:
                                 print(display_files)
+                                continue
                             else:
-                                print('** No files found with the extension indicated')
+                                print(f'{red}** No files found with the extension indicated{reset}')
+                                continue
 
+
+###################################### DISPLAY DUPLICATES #####################################################
                     # find_duplicates = file_00.find_duplicates(p)
                     elif choice in parsing_displayDupe:
                         same_files = file_00.find_duplicates(p)
