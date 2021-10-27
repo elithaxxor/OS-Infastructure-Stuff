@@ -1,17 +1,19 @@
-import traceback, logging, sys, os, asyncio, random, platform, os, os.path, threading
-import ctypes, rich, pprint, os.path, time, shutil, pathlib
-from os.path import exists
-from pathlib import Path
-from time import sleep
-from tqdm import tqdm
+import fnmatch
+import traceback, logging, sys, asyncio, random, platform, os, os.path, threading
+import rich, pprint, os.path, time, shutil, pathlib, ctypes, glob, re
 import IPCHECKER as IPx
+from tqdm import tqdm
 from IPCHECKER import *
-from subprocess import call
-
+from getpass import getpass
+from subprocess import Popen, PIPE, call
+from pathlib import Path
+# from os.path import exists
+# from time import sleep
 
 class Spinner:
     busy = False
     delay = 0.1
+
     @staticmethod
     def spinning_cursor():
         while 1:
@@ -173,19 +175,22 @@ class change_info():
     CURRENT_CLOCK = time.ctime(CURRENT_TIME)
     CLASS_PATH = pathlib.Path.cwd()
 
-    def __init__(self, p): #declared here instead of class head
+    def __init__(self, p):  # declared here instead of class head
         # change_dirs = self.change_dirs
         self.p = p
+        self.cwd = os.getcwd()
+        self.current_time = time.time()
+        self.current_clock = time.ctime(self.current_time)
 
-    @classmethod ## will print the class location, without (p) PATH object declared in functional portion
+    @classmethod  ## will print the class location, without (p) PATH object declared in functional portion
     def info_fromClass(cls):
         print(f'{red}  :: Information that was parsed to the Class instance :: {reset}')
         print(f'{yellow}  :: Called From CLS Method :: {reset}')
-        print(f'{red} {cls.CLASS_PARENT} {reset}')
-        print(f'{red} {cls.CLASS_CWD} {reset}')
-        print(f'{red} {cls.CURRENT_TIME} {reset}')
-        print(f'{red} {cls.CURRENT_CLOCK} {reset}')
-        print(f'{red} {cls.CLASS_PATH} {reset}')
+        print(f'{bblue} {cls.CLASS_PARENT} {reset}')
+        print(f'{bblue} {cls.CLASS_CWD} {reset}')
+        print(f'{bblue} {cls.CURRENT_TIME} {reset}')
+        print(f'{bblue} {cls.CURRENT_CLOCK} {reset}')
+        print(f'{bblue} {cls.CLASS_PATH} {reset}')
 
     def get_sys_info(self, p):
         # print('** ::Getting System Info :: && Starting Threading Process ::')
@@ -216,7 +221,7 @@ class change_info():
                         f.write("\n")
                         line_ticker += 1
                         if line_ticker == len(info):
-                            return f'Successfully wrote cwd info to .txt'
+                            return f'{yellow}Successfully wrote general cwd info to .txt{reset}'
 
                 elif not info:
                     return f'{red}No Info Found, moving on... {reset} \n [ :: List Inputted::] {bblue}{info} {reset}'
@@ -240,7 +245,7 @@ class change_info():
                         f.write("\n")
                         line_ticker += 1
                         if line_ticker == len(info):
-                            return f'Successfully wrote cwd info to .txt'
+                            return f'{yellow}Successfully wrote system info info to .txt{reset}'
                 elif not info:
                     return f'{red}No Info Found, moving on... {reset} \n [ :: List Inputted::] {bblue}{info} {reset}'
                     # pass
@@ -252,101 +257,186 @@ class change_info():
             print(str(E))
             return str(E)
 
+    @staticmethod
+    def write_wild(info0):
+        try:
+            print('Position 1', info0)
+            # print('Position 2', info)
+            with open('wild.txt', 'a') as f:
+                if len(info0) >= 0:
+                    line_ticker = 0
+                    for line in info0:
+                        strLine = str(line)
+                        f.write(strLine)
+                        f.write("\n")
+                        line_ticker += 1
+                        if line_ticker == len(info0):
+                            return f'{yellow} Successfully wrote wild_card info to wild.txt {reset}'
+                elif not info0:
+                    return f'{red}No Info Found, moving on... {reset} \n [ :: List Inputted::] {bblue}{info0} {reset}'
+                    # pass
+                else:
+                    return f'{red} System Error in .txt write'
+        except Exception as E:
+            traceback.print_exc()
+            print(f'{red}** [SYSTEM] Error in writing wild_card info to wild.txt{reset}')
+            print(str(E))
+            return str(E)
+
     ## regex inclusions to return fnmatch.translate for include/exclude filesystems ##
     @staticmethod
-    def regex_inclusions(includes):
-        inclusions = r'|'.join([fnmatch.translate(x) for x in includes])
+    def regex_inclusions(*args, **kwargs):
+        inclusions = r'|'.join([fnmatch.translate(x) for x in args])
         return inclusions
+
     @staticmethod
-    def regex_exclusions(excludes):
-        exclusions = r'|'.join([fnmatch.translate(x) for x in excludes])
+    def regex_exclusions(*args, **kwargs):
+        exclusions = r'|'.join([fnmatch.translate(x) for x in args])
         return exclusions
+
+    ## regex function --> ignore all digits, chars, and - + ?.. use regex pattern seqence to find \
+
+    @staticmethod
+    def regexParent(parent):
+        print(f'{yellow} Starting REGex sequence for parent globber..{reset} \n{blue}{parent}{reset}')
+        time.sleep(.2)
+        sPattern = re.search(r"[\][\b'/']", parent)
+        print(sPattern)
+        return parent
 
     ## 0 display all files, ask user for ext or name, and search params. return search to code below
     ## NEED TO ADD --> Write positinal args to .txt
     def display_all_files(self, p):
-        no_append = ['none','n', 'no', 'c','cancel']
+        global root, dirs
+        no_append = ['none', 'n', 'no', 'c', 'cancel']
         path_str = str(p)  ### <--- may have to do that weird object thing
         exclude_extension = [path_str]
-        include_extension = ['.txt', '.iso', '.doc', '.rar', '.tar', '.odt', '.gz']  ## might have to take out '', it could pull in folders
+        include_extension = ['.txt', '.iso', '.doc', '.rar', '.tar', '.odt',
+                             '.gz']  ## might have to take out '', it could pull in folders
         print(f' :: Exclusion list, after being parsed thru glob converter :: ')
         print(f' :: \t\t RE_INCLUDE \t\t\t  RE_EXCLUDE:: ')
-        print(f' :: {re_include} parsed thru glob converter :: ')
+        # print(f' :: {re_include} parsed thru glob converter :: ')
+
+        print('X' * 50)
+        print(f':: mParsing Sys Info:: , \n in {bblue}{p}{reset} \n current time {yellow}{self.CURRENT_CLOCK}{reset}')
+        change_info.get_sys_info(self, p)
+        print('X' * 50), print(), print()
 
         print(f'Finding All Folders, \n in {bblue}{p}{reset} \n current time {yellow}{self.CURRENT_CLOCK}{reset}')
         print(f'Finding All Files, \n current time {self.CURRENT_CLOCK}')
+
         ## glob.glob to print all files
-        print(f'** Enter the Extension You are looking For ** ')
         # if input has . in it add to list, if no . start, restart recursion
         print('X' * 30)
         print(f'{blue} list for os.walk {reset}')
         print(f'{blue}|| -- root--  || -- dirs -- || -- files -- || {reset}'.center(width))
         for root, dirs, files in os.walk(p):
-            print(f'{bblue}{root}, || {dirs} || {files}{reset}')
+            print(f'{bblue}{root}, \n\n|| {dirs} ||\n\n {files}{reset}')
+            helluvaString = f'\n{root} + \n{dirs} + \n{files}'
+            write_osWalk = change_info.write_specific_info(os.stat(p))
+            print(f'write_osWalk :: {write_osWalk}')
+            print('HELLUVASTRING : ', helluvaString)
 
         print(), print()
         print('x' * 50)
-        print(f'{blue}** list for glob.glob() {reset}')
-        for extension in include_extension:
-            globbed_files = glob.glob(p, f"**\**.{extension}") ## use '**' for recursiver search
-            print(f'{blue} :: {globbed_files} :: {reset}')
-            write_glob = get_info.subDir_write(globbed_files)
-            write_globStat = get_info.subDir_write_stat(os.stat(globbed_files))
-            print(f'glob {write_glob}')
-            print(f'write_globStat {write_globStat}')
+        print(f'{yellow}** list for glob.glob() {reset}')
+        str_p = p
+        str_p = str(str_p)
+        print('string_p', type(str_p))
+        print('string_p', str_p)
+        print('root from above', root)
+        print('dirs from above', dirs)
 
+        print(f'{yellow}**Globbed-files with wildcard ranges:{reset}')
+        print('X' * 50)
+        str_p = str(p)
+        str_p = str_p + f'**/**'
+        print('string_p', str_p)
 
+        str_parent = str_p
+        # str_parent = get_info.regexParent(str_parent) ## to possibly regex // explore other options
 
+        print('string_p', str_p)
+        for globbed_files00 in glob.glob(str_p, recursive=True):
+            pprint.pprint(globbed_files00)
+            print(f'{yellow}globbed_files{reset}')
+            print(f'{blue}{globbed_files00}{reset}')
+
+        for globbed_files01 in glob.glob(str_parent, recursive=True):
+            pprint.pprint(globbed_files01)
+            print(f'{yellow} globbed_files01 {reset}')
+            print(f'{blue} {globbed_files01} {reset}')
+
+        for globbed_files02 in glob.glob(f'/{str_p}*[0-9].*', recursive=True):
+            print(f'{yellow} globbed_files02 {reset}')
+            print(f'{blue} {globbed_files02} {reset}')
+
+        # glob.glob(p, recursive=True)  ## use '**' for recursiver search
+        # print(f'{yellow} :: {globbed_files} :: {reset}')
+        #
+        # print(globbed_files)
+
+        write_glob = change_info.write_specific_info(globbed_files00)
+        write_globStat = change_info.write_specific_info(os.stat(p))
+        print(), print()
+        print('X' * 50)
+        print(f'glob {write_glob}')
+        print(f'write_globStat {write_globStat}'), print(), print()
+        print('X' * 50)
 
         print(f'**Would you like to search For specific files or file-extensions? \n'
               f'\t\t{yellow}[Key]{reset} files= files, f, names, by name\n',
-              f'\t\t{yellow}[Key]{reset} [file-extensions= f, fileext, file ext, ext]')
+              f'\t\t{yellow}[Key]{reset} [file-extensions= fext, fileext, file ext, ext]')
+        print(
+            f'**{bblue} Enter {yellow}[name]{reset} to search by name and {yellow} [ext] {reset} to search for extension {reset}** ')
 
         search_name_A = ['name', 'file name', 'n', 'N', 'NAME']
-        search_ext_A = ['file-extensions', 'extension' 'fileext', 'file ext', 'ext', 'fe',]
-        exit_loops = ['e','E','Exit','EXIT', 'q','Q','quit','QUIT']
+        search_ext_A = ['file-extensions', 'extension' 'fileext', 'file ext', 'ext', 'fe', 'fext']
+        exit_loops = ['e', 'E', 'Exit', 'EXIT', 'q', 'Q', 'quit', 'QUIT']
         search_fileQ = input('** ')
 
-
         ### 01 ### START SEQUENCE TO PARSE BY EXTENSION
-        re_exclude = regex_exclude(exclude_extension)
-        print(f'**Excluded Extensions \n *{re_exclude}')
-        if search_fileQ in search_ext_A: ## if user wants to search by file name
+
+        if search_fileQ in search_ext_A:  ## if user wants to search by file name
             print('X' * 50)
             print(f' Add the extensions you would like to search for. {yellow}[20 MAX]{reset}',
                   f" to exit extension chooser, enter {yellow} ['q'] {reset} or {yellow} ['quit']{reset}")
             while True:
                 ticktick = 0
-                add_extension = input('** ')
-                print()
+                add_extension = []
+                add_extension.append(str(input('** ')))
+                print(), print()
+
                 if add_extension in exit_loops:
-                    parsed_extensions = change_info.getByext(add_extension)
+                    parsed_extensions = change_info.get_fileByext(add_extension)
                     print(parsed_extensions)
                     break
                 if add_extension in no_append:
-                    parsed_extensions = change_info.getByext(add_extension)
+                    parsed_extensions = change_info.get_fileByext(add_extension)
                     print(parsed_extensions)
                     break
-                if add_extension[-1] == '.': ## continue adding to list--> look for flag to break
+                if add_extension:  # [-1] == '.':  ## continue adding to list--> look for flag to break
                     Flag = True
                     while Flag:
-                        include_extension.append(str(search))
-                        input_extensions = change_info.getByext(add_extension)
-                        re_include = regex_inclusions(input_extensions)
+                        include_extension.append(str(add_extension))
 
+                        input_extensions = change_info.get_fileByext(self, exclude_extension, add_extension)
+                        print(input_extensions)
+                        re_include = get_info.regex_inclusions(input_extensions)
                         print(f'Regex Conversion: \n {re_include}')
                         print(input_extensions)
-
                         print()
                         print('X' * 50)
-                        print(f':: Extensions that will be included in the search :: \n {"X"*35} \n\t\t {yellow} {include_extension} {reset}')
+                        print(
+                            f':: Extensions that will be included in the search :: \n {"X" * 35} \n\t\t {yellow} {include_extension} {reset}')
                         print(f'{red} :: Use The Exit Keys to Leave Input Loop :: {reset}')
                         continue
                     if ticktick == 20:
                         print('X' * 50)
                         print(f'{red} Limit Reached. {reset} Moving on to parse search.')
-                        print(f':: Extensions that will be included in the search :: \n {"X"*35} \n\t\t {yellow} {include_extension} {reset}')
-                        parsed_extensions = change_info.getByext(add_extension)
+                        print(
+                            f':: Extensions that will be included in the search :: \n {"X" * 35} \n\t\t {yellow} {include_extension} {reset}')
+                        parsed_extensions = change_info.get_fileByext(add_extension)
                         write_extensions = change_info.write_specific_info(parsed_extensions)
                         print(write_extensions)
 
@@ -356,8 +446,9 @@ class change_info():
                     if add_extension in exit_loops:
                         print('X' * 50)
                         print(f'{red} User Keyed Exit. {reset} Moving on to parse search.')
-                        print(f':: Extensions that will be included in the search :: \n {"X"*35} \n\t\t {yellow} {include_extension} {reset}')
-                        parsed_extensions = change_info.getByext(add_extension)
+                        print(
+                            f':: Extensions that will be included in the search :: \n {"X" * 35} \n\t\t {yellow} {include_extension} {reset}')
+                        parsed_extensions = change_info.get_fileByext(add_extension)
                         print('**Parsed Extensions')
                         print('*', parsed_extensions)
                         return parsed_extensions
@@ -370,44 +461,48 @@ class change_info():
                         break
                     continue
 
-
         #### START SEQUENCE FOR SEARCH BY FILE NAME ####
-        if search_fileQ in search_ext_B:
+        if search_fileQ in search_name_A:
             file_name_return = []
             print('X' * 50)
-            print(f'** Enter the file name paramaters that you would like to search for. \n *{yellow} MAX_LEN = [512] {reset}',
-                  f" To exit search by file name, enter {yellow} ['q'] {reset} or {yellow} ['quit']{reset}")
-            print(f"{red} You can exit input and parse the search values by entering {yellow}  ['e'] {reset} , or {yellow} ['exit'] {reset} at anytime. ")
+            print(
+                f'** Enter the file name paramaters that you would like to search for. \n *{yellow} MAX_LEN = [512] {reset}',
+                f" To exit search by file name, enter {yellow} ['q'] {reset} or {yellow} ['quit']{reset}")
+            print(
+                f"{red} You can exit input and parse the search values by entering {yellow}  ['e'] {reset} , or {yellow} ['exit'] {reset} at anytime. ")
             while True:
-                if seach_fileQ in exit_loops:
+                if search_fileQ in exit_loops:
                     print(f'{red}** Sys.exit, user-specified. {reset}')
                     print(
                         f':: Extensions that will be included in the search :: \n {"X" * 35} \n\t\t {yellow} {include_extension} {reset}')
                     specified_files = change_info.get_fileByname(file_name_return)
                     print(specified_files)
-                    #return specified_files
+                    # return specified_files
 
                 ticktick = 0
                 add_name = input('** ')
                 print()
                 if not add_name:
                     print('X' * 50)
-                    print(f'{red}**A specific name was not specified, parsing ALL available values. (may take some time.){reset}')
+                    print(
+                        f'{red}**A specific name was not specified, parsing ALL available values. (may take some time.){reset}')
                     print(file_name_return)
                     print('X' * 50)
                     specified_files = change_info.get_fileByname(file_name_return)
                     print(specified_files)
                     return specified_files
-                   # break
+                # break
                 if add_name in no_append:
                     print('X' * 50)
-                    print(f'{red}**A specified name has an error, parsing ALL available values. (may take some time.){reset}')
+                    print(
+                        f'{red}**A specified name has an error, parsing ALL available values. (may take some time.){reset}')
                     print(file_name_return)
                     print('X' * 50)
                     specified_files = change_info.get_fileByname(file_name_return)
                     print(specified_files)
                     return specified_files
-                    #break
+
+                    # break
                 if add_name:
                     print('X' * 50)
                     add_name = str(add_name)
@@ -436,33 +531,150 @@ class change_info():
                         break
                     continue
 
+            re_exclude = class_info.regex_exclusions(exclude_extension)
+            print(f'**Excluded Extensions \n *{re_exclude}')
 
             print(f'**{bblue} moving on to extract filenames. {reset} \n ',
                   f'{yellow} {include_extension} {reset} \n ',
                   f'{"x" * 50}')
             print(f'** {bblue} File Extensions that will be omitted {reset} \n',
-                f'{red}{exclude_extension}{reset}')
+                  f'{red}{exclude_extension}{reset}')
+
             specified_files = change_info.get_fileByext(p, include_extension, exclude_extension)
+            if specified_files:
+                #  re_exclude = class_info.regex_exclude(exclude_extension)
+                print(f'**Excluded Extensions \n *{re_exclude}')
+
             print(), print()
 
-      ### create new func to find specific files
-       # searchFlag = True
-    ## FINISH THIS
-    ## use os.walk and glob ##
+    ### create new func to find specific files
 
-    ##00
-    def get_fileByext(self, included_extension, excluded_extension): # might be able to remove positional params
+    def get_fileByext(self, excluded_extension, included_extension):  # might be able to remove positional params
+
         print('X' * 50)
+        print(
+            f' Parsing Inclusin/Exclusion List.. \n Current Time :: (Self from class) {yellow}  [{self.CURRENT_CLOCK}] {reset}')
+        print(
+            f' Parsing Inclusin/Exclusion List.. \n CLASS PATH :: (Self from class) {yellow} [{self.CLASS_PATH}]{reset}')
+        print(
+            f' Parsing Inclusin/Exclusion List.. \n CLASS CWD :: (Self from class) {yellow} [{self.CLASS_PATH}]{reset}')
+        print('X' * 50)
+        print()
+        print('X' * 50)
+        print(f' Parsing Inclusin/Exclusion List.. \n Current Working Directory :: [{self.cwd}]')
+        print(f' Parsing Inclusin/Exclusion List.. \n Current Clock :: [{self.current_clock}]')
+        print('X' * 50)
+        print()
+        print('X' * 50)
+        print(f' Parsing Inclusin/Exclusion List.. \n From lass Method  :: [{change_info.info_fromClass()}]')
+        print('X' * 50)
+        print()
+
         print(f' :: Excludes Extensions :: \n {red}{excluded_extension}{reset}')
         print('\t\t', excluded_extension), print()
         print('X' * 50)
         print(f' :: Included Extensions :: \n {red}{included_extension}{reset}')
         print('\t\t', included_extension), print()
 
+        print('This is what is parsed on by self, \n', self.p)
+        # ., ## may need to call var from class instance self.p
+        str_p = str(p)
+        str_p = str_p + f'**/**'
+        print('string_p', str_p)
+        print(), print(), print(), print(),
 
-        ## add ** for globber, may need to shift down a few lines
-        print(f'{yellow}** Adding [**] to extension for globber{reset}')
-        included_extension = ['**' + included_extension for _ in include_extensions]
+        print('X' * 50)
+        print('X' * 50)
+        print(
+            f' :: {yellow} These are the extensions included for your search:: {reset} \n,{blue} [{included_extension}] {reset}')
+
+        str_p = self.p
+        str_p = str(str_p)
+
+        for wild in included_extension:
+            time.sleep(.1)
+            #  print(wild)
+            wild = '**' + wild
+            print('X' * 50)
+            print(f'**{yellow}Parsing{reset} :: {bblue}[{wild}]{reset}')
+            def_files = glob.glob(os.path.join(self.p, wild), recursive=True)
+            pprint.pprint(def_files)
+            print('X' * 50)
+            print()
+            print(f'{yellow}[{def_files}]{reset}')  # add_extension
+            print()
+            print('X' * 50)
+            write_glob00 = change_info.write_specific_info(def_files)
+            print(write_glob00)
+            write_globStat00 = change_info.write_specific_info(os.stat(str_p))
+            print(write_globStat00)
+            print()
+            print('X' * 50)
+
+        print('X' * 50)
+        print('X' * 50)
+        print('X' * 50)
+
+        ### THIS PRINTS THE SUB FILES FOUND IN SUB-DIRCTORIES
+        for wild_deep in included_extension:
+            time.sleep(.1)
+            wild_deep = '*' + wild_deep
+            str_p = '**' + str(self.p)
+            print(f'{yellow}**New dir to be parsed :: {reset} :: [{str_p}]')
+            print(f'{yellow}**Ext to be parsed :: {reset} :: [{wild_deep}]')
+            for path in Path(self.p).rglob(wild_deep):
+                print(f'{yellow}**Current Ext {reset}:: {reset}{bblue} [{wild_deep}] {reset}')
+                print(f'{yellow}**path.name {reset}:: {reset}{bblue} [{path.name}] {reset}')
+                def_files00 = glob.glob(os.path.join(self.p, wild_deep), recursive=True)
+                print('X' * 50)
+                pprint.pprint(def_files00)
+                print('X' * 50)
+                print()
+                print(f'{yellow}**globbed-files {reset}:: {reset}{bblue} [{def_files00}] {reset}')
+                print('X' * 50)
+                print()
+                ## write files to txt ::
+                write_glob01 = change_info.write_specific_info(def_files00)
+                print(write_glob01)
+                write_globStat01= change_info.write_specific_info(os.stat(self.p))
+                print(write_globStat01)
+                if write_glob01:
+                    print(f'{yellow}**Globbed Files Written to Globstat.txt{reset}')
+                else:
+                    print(f'{red}**Write Failure for globtest')
+
+
+        for extension in included_extension:
+            print(f'{yellow} Extensions From The LIst.  {reset} \n {bblue} {extension} {reset}')
+            str_p = str(p)
+            str_p = str_p + f'**/**'
+            print('string_p', str_p)
+            globbed_files = glob.glob(str_p, recursive=True)  ## use '**' for recursiver search
+            print(globbed_files)
+
+            globbed_files = glob.glob(str_p)  ## use '**' for recursiver search
+            print(f'{blue} :: {globbed_files} :: {reset}')
+            write_glob = change_info.write_specific_info(globbed_files)
+            write_globStat = change_info.write_specific_info(os.stat(p))
+            print(f'glob {write_glob}')
+            print(f'write_globStat {write_globStat}'), print(), print()
+            print('X' * 50)
+
+
+        #  included_extensions = ['**' + included_extension for _ in included_extension]
+        #    included_extensions = ['**' + included_extension for _ in included_extension]
+        # print(included_extensions)
+
+        regex_included_extension = get_info.regex_inclusions(included_extension)
+        #  regex_excluded_extension = get_info.regex_exclusions(excluded_extension)
+        print(f'{yellow}** Regexed Included {regex_included_extension}{reset}')
+        print(f'{bblue} ** {regex_included_extension} ** {reset}')
+        print(f'{yellow}** Regexed Excluded Extensions {excluded_extension}  {reset}')
+       # print(f'{bblue} ** {regex_excluded_extension} ** {reset}')
+       #
+       #  for ext in included_extension:
+       #      for file in glob.glob(f"{p}**{ext}", recursive=True):
+       #          print(file)
         ### start of os.walk
         print('X' * 50)
         for root, dirs, files in os.walk(p, followlinks=True):
@@ -472,26 +684,7 @@ class change_info():
             files_include = [f for f in files if not re.match(includes, f)]
             print(f' ** Excludes Files ** \n {red}{files_exclude}{reset}')
 
-        regex_included_extension = regex_inclusions(included_extension)
-       # print_inclusions =
-        regex_excluded_extension = regex_exclusions(excluded_extension)
-
-        print(f'{yellow}** Regexed Included {Extensinos}{reset}')
-        print(f'{bblue} ** {regex_included_extension} ** {reset}')
-        print(f'{yellow}** Regexed Excluded Extensinos  {reset}')
-        print(f'{bblue} ** {regex_excluded_extension} ** {reset}')
-        ## start of globbing
-        ## get ext from included extensions,
-        ## parse path to globber with ext
-        ## MAY HAVE TO FSTRING / REGEX THE p OBJECT (PATH)
-        for ext in included_extension:
-            for file in glob.glob(f"{p}**{ext}", recursive = True):
-                print(file)
-
-
-
-        #return f'files_exclude ** \n {files_include} **'
-
+        # return f'files_exclude ** \n {files_include} **'
 
         ## exclude files ---> dirs
 
@@ -500,14 +693,12 @@ class change_info():
         print(f'Displaying All Folders for \n \t\t {yellow} {p} {reset} \n \t\t {yellow} {self.CURRENT_CLOCK} {reset}')
         for root, dirs, files in os.walk(p, ):
             folder_list = root + dirs
-            print(f'{yellow} :: Folders Found :: {reset } \n {root} + {dirs} + {files}')
+            print(f'{yellow} :: Folders Found :: {reset} \n {root} + {dirs} + {files}')
             pass
 
             #  files_exclude = [f for f in files if not re.match(excludes, f)]
             #  files_include = [f for f in files if not re.match(includes, f)]
             # print(f' ** Excludes Files ** \n {red}{files_exclude}{reset}')
-
-
 
     ### FINISH THIS
 
@@ -524,7 +715,7 @@ class change_info():
                 print(f'{file_names}')
             file_counter += 1
         return file_names
-          #  return f'files_exclude ** \n {files_include} **'
+        #  return f'files_exclude ** \n {files_include} **'
 
     ## FINISH THIS
     # TO GET FILE BY FOLDER
@@ -537,19 +728,18 @@ class change_info():
                 folder_names = [os.path.join(dirs, f) for f in files]
             folder_counter += 1
 
-        print(f' ** Found {yellow} [{file_counter}] {reset} directories with the name {yellow} [{folder_name}] {reset} ** \n {red}{files}{reset}')
+        print(
+            f' ** Found {yellow} [{file_counter}] {reset} directories with the name {yellow} [{folder_name}] {reset} ** \n {red}{files}{reset}')
         print(f'{folder_names}')
 
         return folder_names
-          #  return f'files_exclude ** \n {files_include} **'
+        #  return f'files_exclude ** \n {files_include} **'
 
-##########################################################################################
     ##########################################################################################
-##########################################################################################
     ##########################################################################################
-##########################################################################################
-
-
+    ##########################################################################################
+    ##########################################################################################
+    ##########################################################################################
 
     # 1
     ### may need to convert to class method for path access . if conversion, rewrite another for instance access
@@ -636,6 +826,7 @@ class change_info():
         if exception is not None:
             return False
 
+
 def install():
     sucessfull_install = []
     subprocess.check_call([sys.executable, "-m", "pip", "install", threading])
@@ -651,24 +842,27 @@ def install():
 
     print('')
 
+
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
 
+
 try:
-    print(IPx.IP)
+    print(IPx.get_ip)
     # print(f'\033[0;35;47m \t\t[{IPx.get_ip()}]  ...? \033[0m 0;35;47m')
     width = os.get_terminal_size().columns  # set the width to center goods
     terminal = os.environ.get('TERM')
     width_len = width
     cwd = os.getcwd()
-    IP = f"\033[1;35;0m {IPx.IP}"
+    #  IP_INFO = f"\033[1;35;0m {IPx.IP}"
+    IP = IPx.get_ip
+
     current_version = platform.release()
     system_info = platform.platform()
     os_name0 = platform.system()
-
 
     ## new adds
     big_names = platform.uname()
@@ -676,14 +870,13 @@ try:
     architecture = platform.architecture()
     user_id = os.uname()
     login = os.getlogin()
-    os.access(cwd)
 
     display_header()
     print(), print()
     print('X' * 150)
     print('X' * 150)
     print()
-    print(f'SYSTEM INFO'.center(width))
+    print(f'SYSTEM INFO'.center(width))  ### IP_INFO Is disabled due to .API usage limit.
     print(f'\033[1;35;m [{current_version}]  ...? '.center(width))
     print(f'\033[1;35;m [{os_name0}] + [{terminal}] ...? '.center(width))
     print(f'\033[1;35;m [{system_info}]  ...? '.center(width))
@@ -695,34 +888,35 @@ try:
     print(f'\033[1;35;0m [{user_id}]  ...? '.center(width))  ###
     print(f'\033[1;35;0m [{login}]  ...? '.center(width))  ###
     print(f'\033[1;35;0m [{current_version}]  ...? '.center(width))  ### ADDD YOUR IP
+    # print(f'\033[1;35;0m [{IP_INFO}]  ...? '.center(width))  ### ADDD YOUR IP
 
     while True:
         if 'Linux' in platform.system():  ## get root for linux
             try:
                 print('X' * 35)
-                print(f' {Red} It Seems Like your on a Linux Distro, Please start with escalate privledge. {reset} ')
-                if not 'SUDO_UID' in os.environ.keys(): ##
+                print(f' {red} It Seems Like your on a Linux Distro, Please start with escalate privledge. {reset} ')
+                if not 'SUDO_UID' in os.environ.keys():  ##
                     print(f'**{red}Must have SU Privledges.{reset}')
                     print('[SYSTEM] Commencing Login Process. \n Enter your Password: ')
                     print('X' * 35)
                     password = getpass('* ')
                     print()
-                    proc = Popen('sudo -S apache2ctl restart'.split(), stdin = PIPE, stderr = PIPE)
+                    proc = Popen('sudo -S apache2ctl restart'.split(), stdin=PIPE, stderr=PIPE)
                     proc.communicate(password.encode())
                     if proc.communicate:
                         print(f'**{yellow}Sudo Escelation Succesfull, moving on.. {reset}')
                         break
                     print(f'{red}** Sudo failed, attempting to run w/out privledges.. {reset}')
                     break
-            except exception as e:
+            except Exception as e:
+                traceback.print_exc()
                 print('IO ERROR - MUST BE SUPER USER()): ', e)
                 sys.exit(1)
-        import ctypes, sys
 
         if 'Windows' in platform.system():
-            print(f' {Red} It Seems Like your on a Windows Distro, Checking if you are admin. {reset} ')
-            if is_admin(): ## windows login
-                print(f'{yellow}**cool you are admin.. moving on.{reset}' )
+            print(f' {red} It Seems Like your on a Windows Distro, Checking if you are admin. {reset} ')
+            if is_admin():  ## windows login
+                print(f'{yellow}**cool you are admin.. moving on.{reset}')
                 break
             else:
                 print(f'{yellow}** Attempting To Escelate Privledges{reset}')
@@ -736,14 +930,14 @@ try:
         if 'Darwin' in platform.system():  ## get root for Mac
             try:
                 print('X' * 35)
-                print(f' {Red} It Seems Like your on a Linux Distro, Please start with escalate privledge. {reset} ')
-                if not 'SUDO_UID' in os.environ.keys(): ##
+                print(f' {red} It Seems Like your on a Linux Distro, Please start with escalate privledge. {reset} ')
+                if not 'SUDO_UID' in os.environ.keys():  ##
                     print(f'**{red}Must have SU Privledges.{reset}')
                     print('[SYSTEM] Commencing Login Process. \n Enter your Password: ')
                     print('X' * 35)
                     password = getpass('* ')
                     print()
-                    proc = Popen('sudo -S apache2ctl restart'.split(), stdin = PIPE, stderr = PIPE)
+                    proc = Popen('sudo -S apache2ctl restart'.split(), stdin=PIPE, stderr=PIPE)
                     proc.communicate(password.encode())
                     if proc.communicate:
                         print(f'**{yellow}Sudo Escelation Succesfull, moving on.. {reset}')
@@ -753,7 +947,6 @@ try:
             except exception as e:
                 print('IO ERROR - MUST BE SUPER USER()): ', e)
                 sys.exit(1)
-
 
     print('X' * 150)
     print('X' * 150)
@@ -861,18 +1054,62 @@ except Exception as f:
 # os.X_OK: Checks if path can be executed
 ## or while?
 
+
+#    os.access(cwd) used for read write and save
+
+
+print(f'{blue}** Testing for filesystem read/write.. {reset} ')
+period = ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.']
+# multi = [2,2,2,2,2,2,2,2,2,2]
+period_len = len(period)
+with Spinner():
+    for z, x in enumerate(period):
+        print(x)
+        time.sleep(.2)
+        if z <= period_len:
+            z += 1
+            print(f"{yellow}{x * z}{reset}")
+            continue
+        elif z == period_len:
+            break
+
 ### check if paths exists
 try:
+    flag = True
     while True:
-        if not p.exists():
-            print(f'{red}** Path Does  Not Exist \n[PATH]*[{p}] {reset}')
+        if flag is False:
             break
-        elif os.access(p, os.R_OK):
-            print(f'{red}** Path Is Not Readable \n[PATH]*[{p}] {reset}')
-            break
-        elif os.access(p, os.W_OK):
-            print(f'{red}** Path Is Not Writable \n[PATH]*[{p}] {reset}')
-            break
+        while flag:
+            if p.exists():
+                print(f'{blue}** Path Does Exist \n[PATH]*[{p}] {reset}')
+                time.sleep(1)
+                flag = False
+            if not p.exists():
+                print(f'{red}** Path Does  Not Exist \n[PATH]*[{p}] {reset}')
+                print(f'{red}*Exiting System \n[PATH]*[{p}] {reset}')
+                sys.exit(1)
+
+            if os.access(p, os.R_OK):
+                print(f'{blue}** Path Is Readable \n[PATH]*[{p}] {reset}')
+                time.sleep(.3)
+
+            elif not os.access(p, os.R_OK):
+                print(f'{red}** Path Is Not Readable \n[PATH]*[{p}] {reset}')
+                sys.exit(1)
+
+            if os.access(p, os.W_OK):
+                print(f'{blue}** Path Is Writable \n[PATH]*[{p}] {reset}')
+                time.sleep(.5)
+                flag = False
+                break
+
+            elif not os.access(p, os.W_OK):
+                print(f'{red}** Path Is Writable \n[PATH]*[{p}] {reset}')
+                sys.exit(1)
+
+
+
+
 
 except OSError as ose:
     traceback.print_exc()
@@ -881,13 +1118,11 @@ except Exception as E:
     traceback.print_exc()
     print(str(E))
 
-
-
-
 if p.exists() and os.access(p, os.R_OK) and os.access(p, os.W_OK):
     current_platform = platform.platform()
-    if platform.platform():# == "Linux-4.4.0-22000-Microsoft-x86_64-with-glibc2.32":
-        print(f'**It seems you may be on {yellow} {current_platform} {reset} \n {red}*The program may not work as expected if unture.{reset} ')
+    if platform.platform():  # == "Linux-4.4.0-22000-Microsoft-x86_64-with-glibc2.32":
+        print(
+            f'**It seems you may be on {yellow} {current_platform} {reset} \n {red}*The program may not work as expected if unture.{reset} ')
         # CURRENT_TIME = time.time()
         # CURRENT_CLOCK = time.ctime(CURRENT_TIME)
         # CLASS_PATH = pathlib.Path.cwd()
@@ -899,7 +1134,6 @@ if p.exists() and os.access(p, os.R_OK) and os.access(p, os.W_OK):
         print(f'* :: Path from Pathlib :: \n\t {yellow} *[{wsl_path}] {reset}')
 
         print(), print()
-
 
         try:
             fail_tick = 0
@@ -930,11 +1164,8 @@ if p.exists() and os.access(p, os.R_OK) and os.access(p, os.W_OK):
                     subdirs = [x for x in p.iterdir() if x.is_dir()]
                     subdirs.sort()
                     pprint.pprint(subdirs)
-
-
                     print('X' * 50)
                     print(f'{bblue} :: {subdirs} :: {reset}'), print()
-
                     print('X' * 50)
                     print(f'{red} :: Directories :: {reset}')
                     print(f':: {red} {dirs}{reset} ::')
@@ -943,18 +1174,18 @@ if p.exists() and os.access(p, os.R_OK) and os.access(p, os.W_OK):
                     ### WRITE SUB DIRS TO .TXT ###
                     ## Navigate Path object to sub dir, then print stats.
                     #
-                    fileSubs_stat = os.stat(subdirs)
+                    # fileSubs_stat = os.stat(subdirs)
 
                     fileSubs_write_check = change_info.write_info(subdirs)  ### write the sub dir
                     subDir_write_check = change_info.write_info(f'** Sub-Dirs {subdirs}')
                     subDir_write_stat = change_info.write_info(f'** Sub-Dir-Stats {dir_stat}')
 
                     print(fileSubs_write_check)
-                    if file_write_check:
+                    if fileSubs_write_check:
                         print(f'{bblue} : Successfully Wrote Sub-Dirs to .txt : {reset}')
+
                     file_choices = ['1', '[1]', 'files', 1]
                     folder_choices = ['2', '[2]', 'folders', 2]
-
                     ## ask user if they want to see sub-directory contents ::
                     print(f'** Would you like to see the all the sub directory contents? ')
                     all_content = input()
