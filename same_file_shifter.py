@@ -725,8 +725,8 @@ class change_info():
             print(f'{yellow} :: list of whats found in dir ::\n{wild_list}')
             write_glob00 = change_info.write_specific_info(def_files)
             print(write_glob00)
-            write_globStat00 = change_info.write_specific_info(os.stat(str_p))
-            print(write_globStat00)
+          #  write_globStat00 = change_info.write_specific_info(os.stat(str_p))
+          #  print(write_globStat00)
             print(f'{yellow}**Finished globbing at-PATH{reset} \n*{self.CURRENT_CLOCK}')
             print()
             print('X' * 50)
@@ -743,10 +743,11 @@ class change_info():
         print('X'* 50)
         print(f' :: {yellow} PRINTING FILES IN SUB-DIRS {reset} :: ')
 
+
         subdir_list = []
         for wild_deep in included_extension:
             time.sleep(.1)
-            wild_deep = '**' + wild_deep
+            wild_deep = '*' + wild_deep
             str_p = '**' + str(self.p)
             print(f'{yellow}**New dir to be parsed :: {reset} :: [{str_p}]')
             print(f'{yellow}**Ext to be parsed :: {reset} :: [{wild_deep}]')
@@ -791,18 +792,21 @@ class change_info():
         if search_subSys in yes_key:
             all_parent_file = []
             parent = pathlib.PurePath('/')
+            parent_fspath = os.fspath(parent)
             find_all_p: str = '**' + str(parent) + "**"
             print(type(find_all_p))
-            print(f'{yellow}Processing information on [PARENT]** {reset} \n[{os.fspath(p)}]')
-            print(f' [{find_all_p}] ')
+            print(f'{yellow}Processing information on [PARENT]** {reset} \n[{os.fspath(parent)}]')
+            print(f' find-all-p [{find_all_p}] \n parent-fs {parent_fspath}')
+
             ### ALL INFORMATION FROM SUBDIR AND DIR ###
             print(f'({yellow}**Printing dir and subdir files{reset}')
 
             for extension in included_extension:
                 for path in Path(parent).rglob(find_all_p):
+                    included_extension00 = str(included_extension)
                     print(f'{yellow}**Current Ext {reset}:: {reset}{bblue} [{find_all_p}] {reset}')
                     print(f'{yellow}**path.name {reset}:: {reset}{bblue} [{path.name}] {reset}')
-                    parent_files00 = glob.glob(os.path.join(find_all_p, included_extension), recursive=True)
+                    parent_files00 = glob.glob(os.path.join(find_all_p, included_extension00), recursive=True)
                     all_parent_file.append(path.name)
                     print('X' * 50)
                     pprint.pprint(parent_files00)
@@ -838,7 +842,6 @@ class change_info():
                 print('X' * 50)
                 print(
                     f'{yellow}**Starting Subsystem fileSeach on \m   {reset} {bblue}{self.p}{reset}\n{yellow}{self.CURRENT_CLOCK}  {reset}')
-
             pass
 
         elif search_subSys in no_key:
@@ -850,7 +853,8 @@ class change_info():
     def display_all_folders(self, p):
         print('X' * 50)
         print(f'Displaying All Folders for \n \t\t {yellow} {p} {reset} \n \t\t {yellow} {self.CURRENT_CLOCK} {reset}')
-        for root, dirs, files in os.walk(p, ):
+
+        for root, dirs, files in os.walk(p, topdown=False, followlinks=True):
             folder_list = root + dirs
             print(f'{yellow} :: Folders Found :: {reset} \n {root} + {dirs} + {files}')
             pass
@@ -878,20 +882,33 @@ class change_info():
 
     ## FINISH THIS
     # TO GET FILE BY FOLDER
-    def get_fileByfolder(self, p, folder_name):
+    def get_fileByfolder(self, p):
+        print(f'{yellow}**CWD INFO {reset} :: ')
+        print(f'{get_info.get_sys_info}')
+        print(f'Finding Duplicates, \n current time {self.CURRENT_CLOCK}')
+        # while self.busy:  # thread t0
+        print('This is self.p ', self.p)
+
         # glob.isglob to find all files recursivly
         folder_counter = 0
-        ## try both isfile() and exists ##
-        for root, dirs, files in os.walk(p, topdown=False, followlinks=True):
-            if (folder_name in dirs) and (file_name.isdirs(p)):
-                folder_names = [os.path.join(dirs, f) for f in files]
-            folder_counter += 1
+        print(f' {yellow}:: Initiating Folder Search Sequence :: {reset}')
+        print(f'**Enter the folder name ')
+        folder_name = input('** ')
+        for root0, dirs0, files0 in os.walk(self.CLASS_CWD, topdown=False, followlinks=True):
+            if folder_name in dirs0:
+               # if folder_name.is_dir(p):
+            #folder_names = os.path.join(self.CLASS_CWD, f)
+                folders = [os.path.join(root, f) for f in dirs0]
+                print(folders)
+                pass
 
-        print(
-            f' ** Found {yellow} [{file_counter}] {reset} directories with the name {yellow} [{folder_name}] {reset} ** \n {red}{files}{reset}')
-        print(f'{folder_names}')
+            
 
-        return folder_names
+        # print(
+        #     f' ** Found {yellow} [{file_counter}] {reset} directories with the name {yellow} [{folder_name}] {reset} ** \n {red}{files}{reset}')
+        # print(f'{folder_names}')
+
+        return folders
         #  return f'files_exclude ** \n {files_include} **'
 
     ##########################################################################################
@@ -904,11 +921,21 @@ class change_info():
     ### may need to convert to class method for path access . if conversion, rewrite another for instance access
     # TO FIND DUPLICATES
     def find_duplicates(self, p):
+        print(f'{yellow}**CWD INFO {reset} :: ')
+        print(f'{get_info.get_sys_info}')
         print(f'Finding Duplicates, \n current time {self.CURRENT_CLOCK}')
         # while self.busy:  # thread t0
-        for dup01, dup02 in os.path.walk(path1, path2):
-            if os.path.samefile(path1, path2):
-                dupe_append = []
+        print('This is self.p ', self.p)
+        folder_path = self.p
+        folder_path = str(folder_path)
+        print('')
+        print('Enter the duplicate you are looking for ')
+        duplicate = input('** ')
+        dupe_list = []
+        for dup01, dup02 in os.path.walk(folder_path):
+            norm_path = folder_path + '/' + duplicate
+            if os.path.normpath(path1, path2):
+
                 print(f'* :: Found Duplicates::')
                 print(f'* Duplicate One :: {dup01} \t\t ** Duplicate Two :: {dup02}')
                 dupe_list.append(path1, path2)
