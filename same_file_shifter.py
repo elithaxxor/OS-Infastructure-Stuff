@@ -964,7 +964,28 @@ class change_info():
         ## creates child path using p
         return f' *Changing {self.p}'
 
+
+
+############ LOGIC FOR UPCOMMING METHOD INSTANCES #######
+### TO GRAB THE PATH NAME::
+    ### print(os.path.dirname('path'/'file)
+
+###### to split files (for duplicate file/flolder search / parse
+    ## print(os.path.splittext('tmp'/file.txt) <--- doublechheck docs
+
+### to get specific dir
+   # print(os.environ.get(path))
+
+#### TO DETECT IF FILE IS SAME FILE
+    ## os.pat.samefile(path1, path2)
+
+### to get python file name
+    ## print('filename', __file__)
+
+
+######
     # 4
+
     def move_dirs(self, p):
         print(f'moving directories,\n current time {self.CURRENT_CLOCK}')
         while self.busy:
