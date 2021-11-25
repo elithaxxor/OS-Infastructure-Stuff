@@ -87,14 +87,8 @@ def display_header():
     six = (f'{red}[+]-[+] copyright material from Adel Al-Aali [+]-[+] {reset}')
     seven = (f'[+] Future Addtion: Attach to OS.Listwalker and impliment Generator/text feed to auto convert large lists  [+]')
 
-    print(f"{one:^70}")
-    print(f"{two:^70}")
-    print(f"{three:^70}")
-    print(f"{four:^70}")
-    print(f"{five:^70}")
-    print(f"{six:^70}")
-    print(f"{seven:^70}")
-    print(f"{x * 20: ^70}")
+    print(f"{one:^70}"); print(f"{two:^70}"); print(f"{three:^70}"); print(f"{four:^70}"); print(f"{five:^70}"); print(f"{six:^70}")
+    print(f"{seven:^70}"); print(f"{x * 20: ^70}")
     print(), print()
 
 
