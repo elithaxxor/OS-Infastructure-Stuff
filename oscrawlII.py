@@ -37,39 +37,6 @@ DIRECTORIES = {
 }
 
 
-# The above function will check for the existing directory for the same name we defined. If the existing directory is found then it will continue or else a new directory is created. And it will categorize all the files based on the extension in the appropriate folder.
-# Organizing: Following is the code for Python Lazy Junk Files Organizer. It will organize everything in the appropriate folder in a single go and remove empty directories.
-
-#
-# def organize_junk():
-#
-#     for entry in os.scandir():
-#         if os.path.isdir(entry):
-#             continue
-#         file_path = Path(entry)
-#         file_format = file_path.suffix.lower()
-#         if file_format in FILE_FORMATS:
-#             directory_path = Path(FILE_FORMATS[file_format])
-#             directory_path.mkdir(exist_ok=True)
-#             file_path.rename(directory_path.joinpath(file_path))
-#
-#         for dir in os.scandir():
-#             try:
-#                 os.rmdir(dir)
-#             except:
-#                 pass
-
-#
-# for dir in os.scandir():
-#     try:
-#         os.rmdir(dir)
-#     except:
-#         pass
-
-# if __name__ == "__main__":
-#     organize_junk()
-#
-
 
 class Spinner:
     busy = False
@@ -371,6 +338,33 @@ class change_info():
         print(sPattern)
         return parent
 
+    # The above function will check for the existing directory for the same name we defined. If the existing directory is found then it will continue or else a new directory is created. And it will categorize all the files based on the extension in the appropriate folder.
+    # Organizing: Following is the code for Python Lazy Junk Files Organizer. It will organize everything in the appropriate folder in a single go and remove empty directories.
+
+    #
+
+    def organize_junk(self):
+        for entry in os.scandir(self.p):
+            if os.path.isdir(entry):
+                continue
+            file_path = Path(entry)
+            file_format = file_path.suffix.lower()
+            if file_format in FILE_FORMATS:
+                directory_path = Path(FILE_FORMATS[file_format])
+                directory_path.mkdir(exist_ok=True)
+                file_path.rename(directory_path.joinpath(file_path))
+            removed_dirs = []
+            for dir in os.scandir():
+                try:
+                    os.rmdir(dir)
+                    removed_dirs.append(dir)
+                    return f'[+] List of Removed Dirs \n {removed_dirs}'
+
+                except:
+                    return f'[+] List of Removed Dirs \n {removed_dirs}'
+                    pass
+
+
     ## 0 display all files, ask user for ext or name, and search params. return search to code below
     ## NEED TO ADD --> Write positinal args to .txt
     def display_all_files(self, p):
@@ -460,10 +454,6 @@ class change_info():
             globbed_parent02 = get_info.getParentDirectoryFromFile(str_p)
             print(f' :: {yellow} Found File in :: {reset}\n {globbed_parent02}')
 
-        # glob.glob(p, recursive=True)  ## use '**' for recursiver search
-        # print(f'{yellow} :: {globbed_files} :: {reset}')
-        #
-        # print(globbed_files)
 
         write_glob = change_info.write_specific_info(globbed_files00)
         write_globStat = change_info.write_specific_info(os.stat(p))
@@ -722,16 +712,6 @@ class change_info():
             print(f'{yellow} :: files :: {reset}')
             print(files)
             print()
-            # files_exclude = [f for f in files if not re.match(included_extension, f)]
-            # files_include01 = [f for f in dirs if re.match(included_extension, f)]
-            # files_include02 = [f for f in root if re.match(included_extension, f)]
-            # print(f'{yellow} ** Root ** {reset} \n {bblue} :: {files_exclude} :: {reset}')
-            # print('X' * 50)
-            # print(f'{yellow} ** Dirs ** {reset}\n {bblue} :: {files_include01} :: {reset}')
-            # print('X' * 50)
-            # print(f'{yellow} ** Files ** \n {reset}{bblue} :: {files_include02} :: {reset}')
-            # print('X' * 50)
-            # print(f'{yellow} ** Excludes Files ** {reset}\n {yellow}{excluded_extension}{reset}')
 
         print(), print()
         print('X' * 50)
@@ -904,13 +884,10 @@ class change_info():
         for root, dirs, files in os.walk(p, topdown=False, followlinks=True):
             #folder_list = root + dirs
             print(f'{yellow} :: Folders Found :: {reset} \n {root} + {dirs} + {files}')
-            pass
 
-            #  files_exclude = [f for f in files if not re.match(excludes, f)]
-            #  files_include = [f for f in files if not re.match(includes, f)]
-            # print(f' ** Excludes Files ** \n {red}{files_exclude}{reset}')
+            return dirs
 
-    ### FINISH THIS
+
 
     # TO GET FILE BY NAME
     def get_fileByname(self, p, file_name):
@@ -950,22 +927,6 @@ class change_info():
                 print(f'[+] Folders \n{folders}\n [+]..System Found {folder_counter} folders')
                 continue
 
-        # print(
-        #     f' ** Found {yellow} [{file_counter}] {reset} directories with the name {yellow} [{folder_name}] {reset} ** \n {red}{files}{reset}')
-        # print(f'{folder_names}')
-
-        #  return f'files_exclude ** \n {files_include} **'
-
-    ##########################################################################################
-    ##########################################################################################
-    ##########################################################################################
-    ##########################################################################################
-    ##########################################################################################
-
-    # 1
-    ### may need to convert to class method for path access . if conversion, rewrite another for instance access
-    # TO FIND DUPLICATES
-
 
     def display_subdirs(self):
         subdirs = [x for x in p.iterdir() if x.is_dir()]
@@ -983,36 +944,57 @@ class change_info():
         afile.close()
         return hasher.hexdigest()
 
+    @staticmethod
+    def joinDictrs(dict1, dict2):
+        for key in dict2.keys():
+            if key in dict1:
+                dict1[key] = dict1[key] + dict2[key]
+            else:
+                dict1[key] = dict2[key]
+
+
+    @staticmethod
+    def printResults(dict1):
+        results = list(filter(lambda x: len(x) > 1, dict1.values()))
+        if len(results) > 0:
+            print('[+] Duplicates Found:')
+            print('[+] The following files are identical. The name could differ, but the content is identical')
+            print('___________________')
+            for result in results:
+                for subresult in result:
+                    print('\t\t%s' % subresult)
+                    with open ('DUPLICATES.txt', 'a') as f:
+                        f.write(subresult)
+                print('___________________')
+        else:
+            print(f'No duplicate files found.')
+
     def find_duplicates(self, p):
+        dups = {}
         print(f'{yellow}**CWD INFO {reset} :: ')
         print(f'{change_info.get_sys_info}')
-        print(f'Finding Duplicates, \n current time {self.CURRENT_CLOCK}')
+        print(f' [+] Finding Duplicates, \n [+] current time {self.CURRENT_CLOCK}')
         # while self.busy:  # thread t0
         print(f'[+] ALL FOLDERS  -- ')
-        change_info.display_all_folders(self)
+        folders = change_info.display_all_folders(self)
         print(f'[+] Sub Dirs -- ')
         change_info.display_subdirs(self)
-        print('This is self.p ', self.p)
+        print('[+] This is self.p ', self.p)
         folder_path = self.p
         folder_path = str(folder_path)
         print('')
         dupe_list = []
-        #
-        if len(sys.argv) > 1:
-            dups = {}
-            folders = sys.argv[1:]
-            for i in folders:
-                # Iterate the folders given
-                if os.path.exists(i):
-                    # Find the duplicated files and append them to the dups
-                    joinDicts(dups, findDup(i))
-                else:
-                    print('%s is not a valid path, please verify' % i)
-                    sys.exit()
-            printResults(dups)
-        else:
-            print('Usage: python dupFinder.py folder or python dupFinder.py folder1 folder2 folder3')
-        dups = {}
+
+        for i in folders:
+            # Iterate the folders given
+            if os.path.exists(i):
+                # Find the duplicated files and append them to the dups
+                change_info.joinDicts(dups, findDup(i))
+            else:
+                print('%s is not a valid path, please verify' % i)
+                sys.exit()
+
+        counter = 0
         for dirName, subDirname, filelist in os.walk(folder_path, topdown=False, followlinks=True):
             #duplciate_01 = folder_path + '/' + dirName
             #duplciate_02 = folder_path + '/' + subDirname
@@ -1020,23 +1002,17 @@ class change_info():
             for filename in filelist:
                 path = os.path.join(dirName, filename)
                 file_hash = change_info.hashfile(path)
-                print(f'[+] File Hash\n {file_hash}')
+             #   print(f'[+] File Hash\n {file_hash}')
                 if file_hash in dups:
+                    print(f'[+] File DUP HASH \n {file_hash}')
+                    print(f'[+] Counter : {counter}')
                     dups[file_hash].append(path)
+                    counter+=1
                 else:
                     dups[file_hash] = [path]
-            print(dups)
-
-
-
-            # if os.path.normpath(duplciate_01) == os.path.normpath(duplciate_02):
-            #     print(f'* :: Found Duplicates::')
-            #     print(f'* Duplicate One :: {dup01} \t\t ** Duplicate Two :: {dup02}')
-            #     dupe_list.append(duplciate_01)
-            #     dupe_list.append(duplciate_02)
-            #     print(f'[+] dupe_list\n{dupe_list}')
-            #
-            # return dupe_list
+        print(f'[+] Counter : {counter}')
+        print(dups)
+        change_info.printResults(dups)
 
 
     # 2
@@ -1076,22 +1052,7 @@ class change_info():
 
 
     ############ LOGIC FOR UPCOMMING METHOD INSTANCES #######
-    ### TO GRAB THE PATH NAME::
-    ### print(os.path.dirname('path'/'file)
 
-    ###### to split files (for duplicate file/flolder search / parse
-    ## print(os.path.splittext('tmp'/file.txt) <--- doublechheck docs
-
-    ### to get specific dir
-    # print(os.environ.get(path))
-
-    #### TO DETECT IF FILE IS SAME FILE
-    ## os.pat.samefile(path1, path2)
-
-    ### to get python file name
-    ## print('filename', __file__)
-
-    ######
     # 4
 
     def move_dirs(self, p):
@@ -1239,361 +1200,385 @@ def is_admin():
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
-width = os.get_terminal_size().columns  # set the width to center goods
-terminal = os.environ.get('TERM')
-width_len = width
-try:
-   # print(IPx.get_ip)
-    # print(f'\033[0;35;47m \t\t[{IPx.get_ip()}]  ...? \033[0m 0;35;47m')
-   # width = os.get_terminal_size().columns  # set the width to center goods
+
+
+
+def main():
+    width = os.get_terminal_size().columns  # set the width to center goods
     terminal = os.environ.get('TERM')
     width_len = width
-    cwd = os.getcwd()
-    #  IP_INFO = f"\033[1;35;0m {IPx.IP}"
-   # IP = IPx.get_ip
+    try:
+       # print(IPx.get_ip)
+        # print(f'\033[0;35;47m \t\t[{IPx.get_ip()}]  ...? \033[0m 0;35;47m')
+       # width = os.get_terminal_size().columns  # set the width to center goods
+        terminal = os.environ.get('TERM')
+        width_len = width
+        cwd = os.getcwd()
+        #  IP_INFO = f"\033[1;35;0m {IPx.IP}"
+       # IP = IPx.get_ip
 
-    current_version = platform.release()
-    system_info = platform.platform()
-    os_name0 = platform.system()
+        current_version = platform.release()
+        system_info = platform.platform()
+        os_name0 = platform.system()
 
-    ## new adds
-    big_names = platform.uname()
-    processor = platform.processor()
-    architecture = platform.architecture()
-    user_id = os.uname()
-    login = os.getlogin()
+        ## new adds
+        big_names = platform.uname()
+        processor = platform.processor()
+        architecture = platform.architecture()
+        user_id = os.uname()
+        login = os.getlogin()
 
-    display_header()
-    print(), print()
-    print('X' * 150)
-    print('X' * 150)
-    print()
-    print(f'SYSTEM INFO'.center(width))  ### IP_INFO Is disabled due to .API usage limit.
-    print(f'\033[1;35;m [{current_version}]  ...? '.center(width))
-    print(f'\033[1;35;m [{os_name0}] + [{terminal}] ...? '.center(width))
-    print(f'\033[1;35;m [{system_info}]  ...? '.center(width))
-    print(f'\033[1;35;0m [{current_version}]  ...? '.center(width))  ### ADDD YOUR IP
-    print(f'\033[1;35;0m [{IP}]  ...? '.center(width))  ### ADDD YOUR IP
-    print(f'\033[1;35;0m [{big_names}]  ...? '.center(width))  ### ADDD YOUR IP
-    print(f'\033[1;35;0m [{processor}]  ...? '.center(width))  ### ADDD YOUR IP
-    print(f'\033[1;35;0m [{architecture}]  ...? '.center(width))  ###
-    print(f'\033[1;35;0m [{user_id}]  ...? '.center(width))  ###
-    print(f'\033[1;35;0m [{login}]  ...? '.center(width))  ###
-    print(f'\033[1;35;0m [{current_version}]  ...? '.center(width))  ### ADDD YOUR IP
-    # print(f'\033[1;35;0m [{IP_INFO}]  ...? '.center(width))  ### ADDD YOUR IP
+        display_header()
+        print(), print()
+        print('X' * 150)
+        print('X' * 150)
+        print()
+        print(f'SYSTEM INFO'.center(width))  ### IP_INFO Is disabled due to .API usage limit.
+        print(f'\033[1;35;m [{current_version}]  ...? '.center(width))
+        print(f'\033[1;35;m [{os_name0}] + [{terminal}] ...? '.center(width))
+        print(f'\033[1;35;m [{system_info}]  ...? '.center(width))
+        print(f'\033[1;35;0m [{current_version}]  ...? '.center(width))  ### ADDD YOUR IP
+        print(f'\033[1;35;0m [{IP}]  ...? '.center(width))  ### ADDD YOUR IP
+        print(f'\033[1;35;0m [{big_names}]  ...? '.center(width))  ### ADDD YOUR IP
+        print(f'\033[1;35;0m [{processor}]  ...? '.center(width))  ### ADDD YOUR IP
+        print(f'\033[1;35;0m [{architecture}]  ...? '.center(width))  ###
+        print(f'\033[1;35;0m [{user_id}]  ...? '.center(width))  ###
+        print(f'\033[1;35;0m [{login}]  ...? '.center(width))  ###
+        print(f'\033[1;35;0m [{current_version}]  ...? '.center(width))  ### ADDD YOUR IP
+        # print(f'\033[1;35;0m [{IP_INFO}]  ...? '.center(width))  ### ADDD YOUR IP
 
-    while True:
-        if 'Linux' in platform.system():  ## get root for linux
-            try:
-                print('X' * 35)
-                print(f' {red} It Seems Like your on a Linux Distro, Please start with escalate privledge. {reset} ')
-                if not 'SUDO_UID' in os.environ.keys():  ##
-                    print(f'**{red}Must have SU Privledges.{reset}')
-                    print('[SYSTEM] Commencing Login Process. \n Enter your Password: ')
+        while True:
+            if 'Linux' in platform.system():  ## get root for linux
+                try:
                     print('X' * 35)
-                    password = getpass('* ')
-                    print()
-                    proc = Popen('sudo -S apache2ctl restart'.split(), stdin=PIPE, stderr=PIPE)
-                    proc.communicate(password.encode())
-                    if proc.communicate:
-                        print(f'**{yellow}Sudo Escelation Succesfull, moving on.. {reset}')
+                    print(f' {red} It Seems Like your on a Linux Distro, Please start with escalate privledge. {reset} ')
+                    if not 'SUDO_UID' in os.environ.keys():  ##
+                        print(f'**{red}Must have SU Privledges.{reset}')
+                        print('[SYSTEM] Commencing Login Process. \n Enter your Password: ')
+                        print('X' * 35)
+                        password = getpass('* ')
+                        print()
+                        proc = Popen('sudo -S apache2ctl restart'.split(), stdin=PIPE, stderr=PIPE)
+                        proc.communicate(password.encode())
+                        if proc.communicate:
+                            print(f'**{yellow}Sudo Escelation Succesfull, moving on.. {reset}')
+                            break
+                        print(f'{red}** Sudo failed, attempting to run w/out privledges.. {reset}')
                         break
-                    print(f'{red}** Sudo failed, attempting to run w/out privledges.. {reset}')
-                    break
-            except Exception as e:
-                traceback.print_exc()
-                print('IO ERROR - MUST BE SUPER USER()): ', e)
-                sys.exit(1)
+                except Exception as e:
+                    traceback.print_exc()
+                    print('IO ERROR - MUST BE SUPER USER()): ', e)
+                    sys.exit(1)
 
-        if 'Windows' in platform.system():
-            print(f' {red} It Seems Like your on a Windows Distro, Checking if you are admin. {reset} ')
-            if is_admin():  ## windows login
-                print(f'{yellow}**cool you are admin.. moving on.{reset}')
-                break
-            else:
-                print(f'{yellow}** Attempting To Escelate Privledges{reset}')
-                ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-                if ctypes.windll.shell32.ShellExecuteW:
-                    print(f'{yellow} Windows Admin Escalation Succesful, moving on.. {reset}')
+            if 'Windows' in platform.system():
+                print(f' {red} It Seems Like your on a Windows Distro, Checking if you are admin. {reset} ')
+                if is_admin():  ## windows login
+                    print(f'{yellow}**cool you are admin.. moving on.{reset}')
                     break
                 else:
-                    print(f'{red}**[ERRNO]Cannot escalate.. proceeding without privledge.. ')
-                    break
-        if 'Darwin' in platform.system():  ## get root for Mac
-            try:
-                print('X' * 35)
-                print(f' {red} It Seems Like your on a Linux Distro, Please start with escalate privledge. {reset} ')
-                if not 'SUDO_UID' in os.environ.keys():  ##
-                    print(f'**{red}Must have SU Privledges.{reset}')
-                    print('[SYSTEM] Commencing Login Process. \n Enter your Password: ')
-                    print('X' * 35)
-                    password = getpass('* ')
-                    print()
-                    proc = Popen('sudo -S apache2ctl restart'.split(), stdin=PIPE, stderr=PIPE)
-                    proc.communicate(password.encode())
-                    if proc.communicate:
-                        print(f'**{yellow}Sudo Escelation Succesfull, moving on.. {reset}')
+                    print(f'{yellow}** Attempting To Escelate Privledges{reset}')
+                    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+                    if ctypes.windll.shell32.ShellExecuteW:
+                        print(f'{yellow} Windows Admin Escalation Succesful, moving on.. {reset}')
                         break
-                    print(f'{red}** Sudo failed, attempting to run w/out privledges.. {reset}')
+                    else:
+                        print(f'{red}**[ERRNO]Cannot escalate.. proceeding without privledge.. ')
+                        break
+            if 'Darwin' in platform.system():  ## get root for Mac
+                try:
+                    print('X' * 35)
+                    print(f' {red} It Seems Like your on a Linux Distro, Please start with escalate privledge. {reset} ')
+                    if not 'SUDO_UID' in os.environ.keys():  ##
+                        print(f'**{red}Must have SU Privledges.{reset}')
+                        print('[SYSTEM] Commencing Login Process. \n Enter your Password: ')
+                        print('X' * 35)
+                        password = getpass('* ')
+                        print()
+                        proc = Popen('sudo -S apache2ctl restart'.split(), stdin=PIPE, stderr=PIPE)
+                        proc.communicate(password.encode())
+                        if proc.communicate:
+                            print(f'**{yellow}Sudo Escelation Succesfull, moving on.. {reset}')
+                            break
+                        print(f'{red}** Sudo failed, attempting to run w/out privledges.. {reset}')
+                        break
+                except Exception as e:
+                    print('IO ERROR - MUST BE SUPER USER()): ', e)
+                    sys.exit(1)
+
+        print('X' * 150)
+        print('X' * 150)
+        print()
+
+        print(f"{'X' * 50}".center(width))
+        print(f"{'X' * 50}".center(width))
+
+        time.sleep(4)
+        clear()
+
+    except OSError as ose:
+        print(str(ose))
+    except Exception as E:
+        traceback.print_exc()
+        print(str(E))
+
+    #
+    # Pure path objects provide path-handling operations which don’t actually access a filesystem.
+    #
+    # Concrete paths are subclasses of the pure path classes. In addition to operations provided by the former(pure path), they also provide methods
+    # # to do system calls on path objects.
+
+    # In conclusion, PurePath acts like string (remove parts of path, join with another path, get parents etc). To remove directory, search d
+    # irectory, create a file or write to file, you must use Path object.
+
+
+    ###########################################################
+    # get cwd, # ask user if they would like to see path dir listing#
+    # save available paths to dictionary
+    # ask user if thery would like to see avail files
+    # save to dir list or dict for sorting..
+    # take first portion of file folder or name and create new folder with it
+    # move all of the found folders/ files into folder
+    ###########################################################
+    ## get vars ##
+
+
+    try:
+        pass
+    except Exception as E:
+        traceback.print_exc()
+        print(str(E))
+
+    # global answer_00, answer_01, starting_path
+    starting_path = os.getcwd()
+    answer_00 = ['yes', 'Yes', 'YES', 'y', 'Y']
+    answer_01 = ['No', 'NO', 'n', 'no', 'N']
+    print(f'Your Directory Type: {platform.platform()}'), print()
+    print(
+        f' Enter The Path You Would Like To Work on: \n This is your Current Working Directory {bblue}{starting_path}{reset} \n')
+    print(f"Alternately, you can type {yellow} [cwd], [c], or [here] {reset} to work in the current directory")
+    path_to_work_in = input()
+
+    ################  ######################  #############################  ########################## ##############
+    #############  ######################  #############################  ########################## ##############
+
+
+    cwd_ans = ['cwd', 'c', 'here', 'home', '']
+    fail_check = ['/']
+
+    ####
+    ## find path
+    try:
+        if path_to_work_in in cwd_ans:
+            p = Path(starting_path)  ## create path object
+
+        elif path_to_work_in in fail_check:
+            p = Path(path_to_work_in)  ## create path object
+            print(f' {red} Moving CWD to: {reset} {bblue} {p} {reset}')
+
+        else:  # if any garbage is thrown at us
+            strike_out = 1
+            while strike_out <= 5:
+                chances = strike_out - 5
+                print(f"** Directory Input Invalid, you have {red}{chances} chances before sys.exit(){reset}")
+                path_to_work_in = input()
+                if path_to_work_in in cwd_ans:
+                    print(' Thank you for entering correct path.')
                     break
-            except Exception as e:
-                print('IO ERROR - MUST BE SUPER USER()): ', e)
-                sys.exit(1)
+                else:
+                    strike_out += 1
+                    print(f"**Yet again, invalid input, you have {chances} chances before sys.exit()")
+                    print()
+                    print('X' * 50)
+                    print(
+                        f'** Stop messing with me.. {red} type yes for CWD or enter the correct directory. {reset}'), print()
+                    if strike_out == 5:
+                        print(' You entered too an invalid path too many times, system exiting'), time.sleep(2)
+                        sys.exit(0)
+                    continue
 
-    print('X' * 150)
-    print('X' * 150)
-    print()
+    except Exception as f:
+        print()
+        traceback.print_exc()
+        print('X' * 50)
+        print(str(f))
+        print()
+    #
+    # os.F_OK: Tests existence of the path.
+    # os.R_OK: Tests readability of the path.
+    # os.W_OK: Tests writability of the path.
+    # os.X_OK: Checks if path can be executed
+    ## or while?
+    #    os.access(cwd) used for read write and save
 
-    print(f"{'X' * 50}".center(width))
-    print(f"{'X' * 50}".center(width))
+    change_info.readWrite_check()
+    try:
+        fail_tick = 0
+        while fail_tick <= 3:
+            print('f View Directory Listing? [Yes or y]')
+            question_input = input('')
+            if question_input in answer_00:
+                ## DIRECTORIES ##
+                dirs = os.listdir()
+                dirs.sort()
+                print(f'{blue} :: Directories :: {reset}')
+                print('X' * 25)
+                pprint.pprint(dirs)
 
-    time.sleep(4)
-    clear()
-
-except OSError as ose:
-    print(str(ose))
-except Exception as E:
-    traceback.print_exc()
-    print(str(E))
-
-#
-# Pure path objects provide path-handling operations which don’t actually access a filesystem.
-#
-# Concrete paths are subclasses of the pure path classes. In addition to operations provided by the former(pure path), they also provide methods
-# # to do system calls on path objects.
-
-# In conclusion, PurePath acts like string (remove parts of path, join with another path, get parents etc). To remove directory, search d
-# irectory, create a file or write to file, you must use Path object.
-
-
-###########################################################
-# get cwd, # ask user if they would like to see path dir listing#
-# save available paths to dictionary
-# ask user if thery would like to see avail files
-# save to dir list or dict for sorting..
-# take first portion of file folder or name and create new folder with it
-# move all of the found folders/ files into folder
-###########################################################
-## get vars ##
-
-
-try:
-    pass
-except Exception as E:
-    traceback.print_exc()
-    print(str(E))
-
-# global answer_00, answer_01, starting_path
-starting_path = os.getcwd()
-answer_00 = ['yes', 'Yes', 'YES', 'y', 'Y']
-answer_01 = ['No', 'NO', 'n', 'no', 'N']
-print(f'Your Directory Type: {platform.platform()}'), print()
-print(
-    f' Enter The Path You Would Like To Work on: \n This is your Current Working Directory {bblue}{starting_path}{reset} \n')
-print(f"Alternately, you can type {yellow} [cwd], [c], or [here] {reset} to work in the current directory")
-path_to_work_in = input()
-
-################  ######################  #############################  ########################## ##############
-#############  ######################  #############################  ########################## ##############
-
-
-cwd_ans = ['cwd', 'c', 'here', 'home', '']
-fail_check = ['/']
-
-####
-## find path
-try:
-    if path_to_work_in in cwd_ans:
-        p = Path(starting_path)  ## create path object
-
-    elif path_to_work_in in fail_check:
-        p = Path(path_to_work_in)  ## create path object
-        print(f' {red} Moving CWD to: {reset} {bblue} {p} {reset}')
-
-    else:  # if any garbage is thrown at us
-        strike_out = 1
-        while strike_out <= 5:
-            chances = strike_out - 5
-            print(f"** Directory Input Invalid, you have {red}{chances} chances before sys.exit(){reset}")
-            path_to_work_in = input()
-            if path_to_work_in in cwd_ans:
-                print(' Thank you for entering correct path.')
-                break
-            else:
-                strike_out += 1
-                print(f"**Yet again, invalid input, you have {chances} chances before sys.exit()")
-                print()
+                print(f'{blue} :: Directories :: {reset}')
+                print(f':: {bblue} {dirs}{reset} ::')
+                print('X' * 25)
+                ## WRITE DIR TO .TXT ##
+                dir_stat = os.stat(p)
+                dir_write_check = change_info.write_info(f'** dirs {dirs}')
+                dir_write_stat = change_info.write_info(f'** dir_stat {dir_stat}')
+                print('** Directory Write Check ', dir_write_check)
+                ## SUB DIRECTORIES ##
+                print(), print()
+                print(f'{blue} :: Sub-Directories :: {reset}')
+                print('X' * 25)
+                subdirs = [x for x in p.iterdir() if x.is_dir()]
+                subdirs.sort()
+                pprint.pprint(subdirs)
                 print('X' * 50)
+                print(f'{bblue} :: {subdirs} :: {reset}'), print()
+                print('X' * 50)
+                print(f'{red} :: Directories :: {reset}')
+                print(f':: {red} {dirs}{reset} ::')
+                print('X' * 25)
+
+                ### WRITE SUB DIRS TO .TXT ###
+                ## Navigate Path object to sub dir, then print stats.
+                #
+                # fileSubs_stat = os.stat(subdirs)
+
+                fileSubs_write_check = change_info.write_info(subdirs)  ### write the sub dir
+                subDir_write_check = change_info.write_info(f'** Sub-Dirs {subdirs}')
+                subDir_write_stat = change_info.write_info(f'** Sub-Dir-Stats {dir_stat}')
+
+                print(fileSubs_write_check)
+                if fileSubs_write_check:
+                    print(f'{bblue} : Successfully Wrote Sub-Dirs to .txt : {reset}')
+
+                file_choices = ['1', '[1]', 'files', 1]
+                folder_choices = ['2', '[2]', 'folders', 2]
+                ## ask user if they want to see sub-directory contents ::
+                print(f'** Would you like to see the all the sub directory contents? ')
+                all_content = input()
+                if all_content in answer_00:
+                    for files in os.walk(p, topdown=False, followlinks=True):
+                        pprint.pprint(files)
+                elif all_content in answer_01:
+                    for files in os.walk(p, topdown=False, followlinks=True):
+                        change_info.write_info(files)
+                else:
+                    print(f'{red} :: INVALID INPUT :: {reset},, \n printing all dirs, then moving on..')
+                    for files in os.walk(p, topdown=False, followlinks=True):
+                        change_info.write_info(files)
+                        pprint.pprint(files)
+
+                #####################  #############################
+                #####################  #############################
+                #####################  #############################
+                #####################  #############################
+
+                print('X' * 50)
+                print(' :: Your Working DIR::')
+                print(f"{red}{p}{reset}")
+                print(f'{red}** [MAKE SURE THE PARENT DIR BELOW IS CORRECT, PRESS CTRL + Z TO TO EXIT] {reset}  ')
+                print(f' :: PARENT DIR [To Be Worked On] \n {red} {p} {reset} ::')
+                print()
                 print(
-                    f'** Stop messing with me.. {red} type yes for CWD or enter the correct directory. {reset}'), print()
-                if strike_out == 5:
-                    print(' You entered too an invalid path too many times, system exiting'), time.sleep(2)
-                    sys.exit(0)
-                continue
+                    f'** Choose {yellow}[1]{reset} view all files or {yellow} [2]{reset} display duplicate folders {yellow}[3]{reset} move files')
+                choice = input('')
+                ###
+                parsing_displayFile = ['1', 1, 'display files', 'display file', 'file', 'files', '[1]']
+                parsing_displayDupe = ['2', 2, 'display dupe', 'display duplicate', 'duplicates', '[2]']
+                parsing_moveFiles = ['3', 3, 'move files', 'move', '[3]']
+                parsing_organizeFiles = ['4', 4, 'organize files', 'organize file', 'organize', 'o', 'O', '[4]']
 
-except Exception as f:
-    print()
-    traceback.print_exc()
-    print('X' * 50)
-    print(str(f))
-    print()
-#
-# os.F_OK: Tests existence of the path.
-# os.R_OK: Tests readability of the path.
-# os.W_OK: Tests writability of the path.
-# os.X_OK: Checks if path can be executed
-## or while?
-#    os.access(cwd) used for read write and save
+                ###
+                file_00 = change_info(p)  ## obj instiate
+                ## display all files
+                if choice in parsing_displayFile:
+                    # move_files = file_00.move_files(p)
+                    with Spinner():
+                        print(f'** {bblue} initiating find_duplicates sequence {reset}')
+                        x = f'{red} add amt of duplicaters {reset}'
+                        print(f'** System found {x} {file_00.find_duplicates}')
+                        print(), print()
+                        print('X' * 50)
+                        print(f"{red}{file_00.get_sys_info(p)}{reset}")  ## pulls file from class method
+                        print(f'** {bblue}initiating {red} --FILE-- {reset} display-all-sequence {reset}')
+                        display_files = file_00.display_all_files(p)
+                        if display_files:
+                            print(display_files)
+                            continue
+                        else:
+                            print(f'{red}** No files found with the extension indicated{reset}')
+                            continue
 
-change_info.readWrite_check()
-try:
-    fail_tick = 0
-    while fail_tick <= 3:
-        print('f View Directory Listing? [Yes or y]')
-        question_input = input('')
-        if question_input in answer_00:
-            ## DIRECTORIES ##
-            dirs = os.listdir()
-            dirs.sort()
-            print(f'{blue} :: Directories :: {reset}')
-            print('X' * 25)
-            pprint.pprint(dirs)
 
-            print(f'{blue} :: Directories :: {reset}')
-            print(f':: {bblue} {dirs}{reset} ::')
-            print('X' * 25)
-            ## WRITE DIR TO .TXT ##
-            dir_stat = os.stat(p)
-            dir_write_check = change_info.write_info(f'** dirs {dirs}')
-            dir_write_stat = change_info.write_info(f'** dir_stat {dir_stat}')
-            print('** Directory Write Check ', dir_write_check)
-            ## SUB DIRECTORIES ##
-            print(), print()
-            print(f'{blue} :: Sub-Directories :: {reset}')
-            print('X' * 25)
-            subdirs = [x for x in p.iterdir() if x.is_dir()]
-            subdirs.sort()
-            pprint.pprint(subdirs)
-            print('X' * 50)
-            print(f'{bblue} :: {subdirs} :: {reset}'), print()
-            print('X' * 50)
-            print(f'{red} :: Directories :: {reset}')
-            print(f':: {red} {dirs}{reset} ::')
-            print('X' * 25)
+                ###################################### DISPLAY DUPLICATES #####################################################
+                # find_duplicates = file_00.find_duplicates(p)
+                elif choice in parsing_displayDupe:
+                    same_files = file_00.find_duplicates(p)
+                    with Spinner():
+                        print(f'** {bblue}initiating {red} --FILE-- {reset} display-dupe-sequence {reset}')
+                        find_duplicates = file_00.find_duplicates(p)
+                        x = f'{red} add amt of duplicaters {reset}'
+                        print(f'** System found {x} {find_duplicates}')
+                        pass
 
-            ### WRITE SUB DIRS TO .TXT ###
-            ## Navigate Path object to sub dir, then print stats.
-            #
-            # fileSubs_stat = os.stat(subdirs)
+                ## ask uswer what they want to do. 1. display only files. 2. display duplicates. 3. group-move similar files.
+                ## MOVE FOLDERS
 
-            fileSubs_write_check = change_info.write_info(subdirs)  ### write the sub dir
-            subDir_write_check = change_info.write_info(f'** Sub-Dirs {subdirs}')
-            subDir_write_stat = change_info.write_info(f'** Sub-Dir-Stats {dir_stat}')
-
-            print(fileSubs_write_check)
-            if fileSubs_write_check:
-                print(f'{bblue} : Successfully Wrote Sub-Dirs to .txt : {reset}')
-
-            file_choices = ['1', '[1]', 'files', 1]
-            folder_choices = ['2', '[2]', 'folders', 2]
-            ## ask user if they want to see sub-directory contents ::
-            print(f'** Would you like to see the all the sub directory contents? ')
-            all_content = input()
-            if all_content in answer_00:
-                for files in os.walk(p, topdown=False, followlinks=True):
-                    pprint.pprint(files)
-            elif all_content in answer_01:
-                for files in os.walk(p, topdown=False, followlinks=True):
-                    change_info.write_info(files)
-            else:
-                print(f'{red} :: INVALID INPUT :: {reset},, \n printing all dirs, then moving on..')
-                for files in os.walk(p, topdown=False, followlinks=True):
-                    change_info.write_info(files)
-                    pprint.pprint(files)
-
-            #####################  #############################
-            #####################  #############################
-            #####################  #############################
-            #####################  #############################
-
-            print('X' * 50)
-            print(' :: Your Working DIR::')
-            print(f"{red}{p}{reset}")
-            print(f'{red}** [MAKE SURE THE PARENT DIR BELOW IS CORRECT, PRESS CTRL + Z TO TO EXIT] {reset}  ')
-            print(f' :: PARENT DIR [To Be Worked On] \n {red} {p} {reset} ::')
-            print()
-            print(
-                f'** Choose {yellow}[1]{reset} view all files or {yellow} [2]{reset} display duplicate folders {yellow}[3]{reset} move files')
-            choice = input('')
-            ###
-            parsing_displayFile = ['1', 1, 'display files', 'display file', 'file', 'files', '[1]']
-            parsing_displayDupe = ['2', 2, 'display dupe', 'display duplicate', 'duplicates', '[2]']
-            parsing_moveFiles = ['3', 3, 'move files', 'move', '[3]']
-
-            ###
-            file_00 = change_info(p)  ## obj instiate
-            ## display all files
-            if choice in parsing_displayFile:
-                # move_files = file_00.move_files(p)
-                with Spinner():
-                    print(f'** {bblue} initiating find_duplicates sequence {reset}')
-                    x = f'{red} add amt of duplicaters {reset}'
-                    print(f'** System found {x} {file_00.find_duplicates}')
+                elif choice in folder_choices:
+                    folder_00 = change_info(p)
                     print(), print()
                     print('X' * 50)
-                    print(f"{red}{file_00.get_sys_info(p)}{reset}")  ## pulls file from class method
-                    print(f'** {bblue}initiating {red} --FILE-- {reset} display-all-sequence {reset}')
-                    display_files = file_00.display_all_files(p)
-                    if display_files:
-                        print(display_files)
-                        continue
-                    else:
-                        print(f'{red}** No files found with the extension indicated{reset}')
-                        continue
+                    print(f' {blue}:: PARENT DIR [To Be Worked On] ::{reset}')
+                    print(f"{red}{folder_00.get_sys_info(p)}{reset}")  ## pulls file from class method
+                    with Spinner():
+                        print(f'** {bblue}initiating find_duplicates sequence {reset}')
+
+                        find_duplicates = folder_00.find_duplicates(p)
+                        x = f'{red} {find_duplicates} {reset}'
+                        pprint.pprint(find_duplicates)
+                        print(f'** System found {yellow}[{x}]{reset} duplicates{red}{find_duplicates} {reset}')
+
+                if choice in parsing_organizeFiles:
+                    # move_files = file_00.move_files(p)
+                    with Spinner()
+                        print(f'** {bblue}initiating find_duplicates sequence {reset}')
+                        organize_files = folder_00.organize_junk()
+                        print(organize_files)
+
+            elif question_input in answer_01:
+                print(' ## Saving Directory Contents to txt ##')
+                break
+            else:
+                sys_exit = 3 - fail_tick
+                print(f'Invalid Input, you have {sys_exit} tries before sys.exit')
+                fail_tick += 1
+                if fail_tick == 3:
+                    print('Too many invalid attempts, system exiting.. ')
+                    time.sleep(1)
+                    sys.exit(0)
 
 
-            ###################################### DISPLAY DUPLICATES #####################################################
-            # find_duplicates = file_00.find_duplicates(p)
-            elif choice in parsing_displayDupe:
-                same_files = file_00.find_duplicates(p)
-                with Spinner():
-                    print(f'** {bblue}initiating {red} --FILE-- {reset} display-dupe-sequence {reset}')
-                    find_duplicates = file_00.find_duplicates(p)
-                    x = f'{red} add amt of duplicaters {reset}'
-                    print(f'** System found {x} {find_duplicates}')
-                    pass
+    except Exception as f:
+        traceback.print_exc()
+        print(str(f))
 
-            ## ask uswer what they want to do. 1. display only files. 2. display duplicates. 3. group-move similar files.
-            ## MOVE FOLDERS
 
-            elif choice in folder_choices:
-                folder_00 = change_info(p)
-                print(), print()
-                print('X' * 50)
-                print(f' {blue}:: PARENT DIR [To Be Worked On] ::{reset}')
-                print(f"{red}{folder_00.get_sys_info(p)}{reset}")  ## pulls file from class method
-                with Spinner():
-                    print(f'** {bblue}initiating find_duplicates sequence {reset}')
-                    find_duplicates = folder_00.find_duplicates(p)
-                    x = f'{red} {find_duplicates} {reset}'
-                    pprint.pprint(find_duplicates)
-                    print(f'** System found {yellow}[{x}]{reset} duplicates{red}{find_duplicates} {reset}')
+if __name__ == "__main__":
+    main()
 
-        elif question_input in answer_01:
-            print(' ## Saving Directory Contents to txt ##')
-            break
-        else:
-            sys_exit = 3 - fail_tick
-            print(f'Invalid Input, you have {sys_exit} tries before sys.exit')
-            fail_tick += 1
-            if fail_tick == 3:
-                print('Too many invalid attempts, system exiting.. ')
-                time.sleep(1)
-                sys.exit(0)
 
-except Exception as f:
-    traceback.print_exc()
-    print(str(f))
+
+
+
+
 #
 # else: ## if it is not a path, return back to user input
 # passimport fnmatch
