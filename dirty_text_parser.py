@@ -4,6 +4,8 @@ from collections import Counter
 import nltk
 import io, pprint
 from pprint import pprint
+from collections import OrderedDict
+
 
 class Colors:
     reset = "\033[0m"
@@ -85,11 +87,18 @@ class TextBuffer():
         return '{}({})'.format(type(self).__name__,', '.join(str(getattr(self, a)) for a in self._args))
     ### website_list = [x.strip() for x in content]   ####
     ### ADD LOGIC TO COUNT NUMBERS                    ####
+    
+    def findDups(self):
+        dups = list(OrderedDict.fromkeys(self.text_data))
+        return dups 
+
     def text_file_len(self):
         with open(self.text_loc) as f:
             for line in open(self.text_loc):
                 index = 0
                 self.text_data = f.readlines(self.list_count)
+                duplicates = findDups()
+                print(duplicates) 
                 self.text_line = f.readline(self.list_count)
                 self.text_len = len(self.text_data)
                 self.list_count += 1
