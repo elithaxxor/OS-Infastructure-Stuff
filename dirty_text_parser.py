@@ -98,7 +98,7 @@ class TextBuffer():
                 index = 0
                 self.text_data = f.readlines(self.list_count)
                 duplicates = findDups()
-                print(duplicates) 
+                print(str(duplicates))
                 self.text_line = f.readline(self.list_count)
                 self.text_len = len(self.text_data)
                 self.list_count += 1
