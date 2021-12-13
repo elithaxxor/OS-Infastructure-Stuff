@@ -6,6 +6,49 @@ Need to set up two static methods for file detection.
 2. glob/**/glob for simular file names / structure. 
 '''
 
+
+## sample code ## 
+    def scanDirs00(self, file_name):
+        print("Files and Directories in '% s':" % self.vid_loc)
+        # glob.isglob to find all files recursivly
+        global file_names
+        file_counter = 0
+        ## try both isfile() and exists ##
+        for root, dirs, files in tqdm(os.walk(p), followlinks=True):
+            if file_name in files and file_name.isfile(p):
+                file_names = [os.path.join(root, f) for f in files]
+                print(
+                    f' ** Found {yellow} [{file_counter}] {reset} files with the name {yellow} [{file_name}] {reset} ** \n {red}{files}{reset}')
+                print(f'{file_names}')
+                for entry in dirs:
+                    if entry.is_dir()
+                        print('DIR FOUND', entry.name)
+                    elif entry.is_file():
+                        print('DIR FOUND', entry.name)
+            file_counter += 1
+            return file_names
+
+    def scanDirs01(self, file_name):
+            file_list = []
+            with os.scandir(path) as ls:
+                for item in ls:
+                    if item.is_file():
+                        filename = str(item.name)
+                        if ext == '':
+                            file_list.append(filename)
+                            interrogative = "Select a file: "
+                        elif filename.endswith(ext):
+                            file_list.append(filename)
+                            interrogative = "Select " + ext + " file: "
+            i = 1
+            for file in file_list:
+                print("[" + str(i) + "] " + file)
+                i += 1
+            selected = validate_selection(interrogative, file_list)
+            return selected
+
+        ### EOsample Code ###
+
 class hashVerify():
     def __init__(self):
         self.hash_list = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
