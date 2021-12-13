@@ -1,5 +1,10 @@
 import hashlib, os, sys, time
 
+'''
+Need to set up two static methods for file detection. 
+1. scandir + hash for same filenames 
+2. glob/**/glob for simular file names / structure. 
+'''
 
 class hashVerify():
     def __init__(self):
