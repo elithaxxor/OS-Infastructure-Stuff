@@ -6,16 +6,13 @@ from datetime import date
 import traceback, sys
 
 '''
-1. prelim test on the surface. 
-2. scan dirs, write files
-3. take pathes and hash them. ]
-4. use .txt checker to compare hashes. 
-
-## use str chunking to find simiular filenames (hashing wont pick up on it) 
-
+1. prelimnary scan 
+2. deeper scan, write file to txtr
+3. take .txt and hash filepatths
+4. use algo below to compare .txt lines 
+5. 
 '''
-
-# to compare .txt and read lists --> use for hashing comparassion after prelim check.   
+## finding duplicates within a set
 with open('file') as f:
     seen = set()
     for line in f:
@@ -70,6 +67,15 @@ try:
                 print()
                 return False
 
+
+    with open('file') as f:
+        seen = set()
+        for line in f:
+            line_lower = line.lower()
+            if line_lower in seen:
+                print(line)
+            else:
+                seen.add(line_lower)
 
     counter = 0
     part_path = [] ## add partial chunk, use condition to check the end
