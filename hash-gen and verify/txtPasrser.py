@@ -1,26 +1,29 @@
-## use the lsit parser to compare hash results from the hash gen/verfication. 
-import hashlib, os, sys, time
-
-'''
-Need to set up two static methods for file detection. 
-1. scandir + hash for same filenames 
-2. glob/**/glob for simular file names / structure. 
-'''
-
-############################################
-'''
-The text parsing should return a list  of the dir and sunfodlers for the hasher.
-should analzye the str of file to see anomolouis- ie- simiular file file name, differing structure.
-
-prints the detaoled file info to .txt and basic to term. 
-
-'''
 import os
 import os.path
 from pathlib import Path
 import time
 from datetime import date
 import traceback, sys
+
+'''
+1. prelim test on the surface. 
+2. scan dirs, write files
+3. take pathes and hash them. ]
+4. use .txt checker to compare hashes. 
+
+'''
+
+# to compare .txt and read lists --> use for hashing comparassion after prelim check.   
+with open('file') as f:
+    seen = set()
+    for line in f:
+        line_lower = line.lower()
+        if line_lower in seen:
+            print(line)
+        else:
+            seen.add(line_lower)
+
+
 
 try:
     print(f'Current Working Directory: {path00}'.center(width))
@@ -30,9 +33,13 @@ try:
     print(os.scandir(path00))
 
     for x in os.scandir():
+    for x in os.scandir():
         print(x)
 
-    os.chdir(path00)
+    p = Path(path_input)
+    os.chdir(p)
+    print(p.parent)
+
     print(f'[SYS] [PRELIM DIR-SCAN]\n {os.listdir(path00)} +"\n"'.center(width))
     print(f'[SYS] [PRELIM INDEPTH DIR-SCAN] \n {os.scandir(path00)} +"\n"'.center(width))
     print(f'Changed working directory:  {path00}'.center(width))
@@ -61,9 +68,12 @@ try:
                 print()
                 return False
 
+
     counter = 0
     part_path = [] ## add partial chunk, use condition to check the end
     print(list(p.glob('**/**.py')))
+    p = Path(os.getcwd())
+    print(p.resolve(x))
 
     print(), print()
     if os.path.exists:
@@ -73,6 +83,9 @@ try:
             print(f"{'*' * 50}".center(width))
             print(), print()
             for f in path.iterdir():
+                meta_str = f'{f}:StreamName'
+                meta = open('myfile.ext:StreamName').read()
+
                 print(f'{f}'.center(width))
                 directory = f.parent
                 extension = f.suffix
@@ -129,6 +142,9 @@ if os.path.exists:
 for x in os.walk(path, followlinks=True):
     print(path+x)
 
+
+
+
 for x in os.listdir(path00):
     full_path = str(path00) + x
     name_chunks = full_path.split(_)
@@ -142,6 +158,9 @@ for x in os.listdir(path00):
         f.write(f'{NEW_IP} \n')
     print(f'[+] Generation Complete, file info has been saved: \n [FILENAME] [{new_path}.txt')
 
+
+
+
     print(os.scandir(path00))
     for x in os.scandir():
         print(x)
@@ -153,13 +172,12 @@ for x in os.listdir(path00):
     dir_len = len(os.listdir(path00))
     data_txt = f'file_list+{date.today}_{time.ctime}'
     counter = 0
-    p = Path()
+
 
    # writes files for hashing later
     print(f'[+]** Sys found [{dir_len}] items in CWD')
     for x in os.listdir():
         full_path = str(path00) + x
-
         if x in os.listdir():
             print(os.stat(full_path))
             dir_files.append(full_path)
@@ -176,17 +194,23 @@ for x in os.listdir(path00):
             sys.exit(1)
 
 
+
+
+
+
 path00=str(path00)
 [x for x in p.iterdir() if os.path.isfile(str(path00)+str(x).is_file())]
 print(x)
-print(p.resolve(x))
 
 print(), print()
+
 
 print(type(path00))
 print(path00)
 p = Path()
 p.resolve()
+
+
 #with open
 # for x in p.iterdir(path):
 #     print(x)
@@ -195,135 +219,3 @@ print(list(p.glob('**/**.py')))
 
 counter = 0
 print(), print()
-
-class hashVerify():
-    def __init__(self):
-        self.hash_list = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
-        self.md5 = hashlib.md5()
-        self.sha1 = hashlib.sha1()
-        self.sha224 = hashlib.sha224()
-        self.sha256 = hashlib.sha256()
-        self.sha384 = hashlib.sha384()
-        self.sha512 = hashlib.sha512()
-        print(f'[+] Enter the dir for hash verification \n\t\t [+]**[CURRENT-DIR] {os.getcwd()}')
-        self.path = input(r'')
-        print(f'[+] Enter the hash  ')
-        self.hash_toVerify = input('')
-        # self.hash_toVerify = hashlib.encode(self.hash_toVerify)
-        # self.path.hash_toVerify(self.hash_toVerify)
-        # self.hash_toVerify=self.hash_toVerify.encode()
-        self.hash_toVerify = str.encode(self.hash_toVerify)
-
-    @staticmethod
-    def scan_duplicates(self, p, file_name):
-        print('[+] Enter the Directory to scan: ')
-        global duplicates
-        file_counter = 0
-        ## try both isfile() and exists ##
-        for root, dirs, files in tqdm(os.walk(p), followlinks=True):
-            if file_name in files and file_name.isfile(p):
-                duplicates = [os.path.join(root, f) for f in files]
-                print(
-                    f' ** Found {yellow} [{file_counter}] {reset} files with the name {yellow} [{file_name}] {reset} ** \n {red}{files}{reset}')
-                print(f'{duplicates}')
-            file_counter += 1
-            return duplicates
-
-    def verify_hash(self):
-        print(f'[+] [Verifying -- byte format] :: \n \t\t[+]**[{self.hash_toVerify}]')
-        print(f'\n{"X" * 50} [+] List of Hashes to be Verified: \n \t\t[+]**[{self.hash_list}]')
-        with open(self.path, 'rb') as f:
-            toVerify = f.read()
-            print(f'[+] Verifying :: \n \t\t[{toVerify}]')
-            for hash_obj in self.hash_list:
-                hash0 = getattr(hashlib, hash_obj)
-                m = hashlib.new(hash_obj)
-                m.update(self.path)
-                print('X' * 50)
-                print(f'[+] --- [ITERATING] --- [+] ')
-                print(f'[+] [OLD HASHES]: \n [{self.path}] \n \t\t[{m.name}] :: [{m.hexdigest()}]')
-                print(f'[+] [OLD HASHE]: \n [{self.path}] \n \t\t[{m.name}] :: [{m.digest()}]')
-                print(f'[+] [OLD HASH-SIZE]: \n [{self.path}] \n \t\t[{m.name}] :: [{m.digest_size}]')
-                print(f'[+] [OLD BLOCK-SIZE]: \n [{self.path}] \n \t\t[{m.name}] :: [{m.block_size}]')
-                print('X' * 50)
-
-                self.hash_toVerify = m.new(hash_obj)
-                # hash_obj.update(toVerify)
-                print(f'[+] Hashed Object: \n [{toVerify}] \n \t\t[{m.name}] :: [{m.hexidigest()}]')
-                if m.hexidigest() == self.hash_toVerify:
-                    print('X' * 50)
-                    print(f'[+] Matching Hashes Detected \n {self.toVerify}\n\t{m.name}\t\t{m.hexidigest()}')
-                    print(f'[+] Matching Hashes Detected \n {self.toVerify}\n\t{m.name}\t\t{m.digest()}')
-                    print('X' * 50)
-                    break
-
-
-class makeHash():
-    def __init__(self):
-        self.hash_list = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
-        self.md5 = hashlib.md5()
-        self.sha1 = hashlib.sha1()
-        self.sha224 = hashlib.sha224()
-        self.sha256 = hashlib.sha256()
-        self.sha384 = hashlib.sha384()
-        self.sha512 = hashlib.sha512()
-        print(f'[+] Enter the dir for hash verification ')
-        self.path = input(r'')
-        # self.path = self.path.encode()
-
-        self.path = str.encode(self.path)
-
-    #  self.h = getattr(hashlib, self.path)
-
-    def create_hash(self):
-        print(f'[+] Creating Hashes :: \n \t\t[{self.path}]')
-        print(f'\n{"X" * 50} [+] List of Hashes to be created: \n \t\t[+]**[{self.hash_list}]')
-        with open(self.path, 'rb') as f:
-            content = f.read()
-            for hash_obj in self.hash_list:
-                hash0 = getattr(hashlib, hash_obj)  ## create object
-                m = hashlib.new(hash_obj)
-                m.update(self.path)
-                print(m)
-                print('[+] hash_obj:', hash_obj)
-                print('[+] Hash_loc', hash0)
-                assert isinstance(hash0(self.path).hexdigest, object)
-                print('X' * 50)
-                print(f'[+] [NEW HASHES]: \n [{self.path}] \n \t\t[{m.name}] :: [{m.hexdigest()}]')
-                print(f'[+] [NEW HASHES]: \n [{self.path}] \n \t\t[{m.name}] :: [{m.digest()}]')
-                print(f'[+] [NEW HASH-SIZE]: \n \t\t[{m.name}] :: [{m.digest_size}]')
-                print(f'[+] [NEW BLOCK-SIZE]: \n \t\t[{m.name}] :: [{m.block_size}]')
-                print('X' * 50)
-
-def main():
-    verify = hashVerify()
-    create = makeHash()
-    verifyq = ["verify", "Verify", "V", "v", "ver"]
-    createq = ["create", "Create", "C", "c", "crea"]
-    print(f'[+] :: [DIRTY HASHER] :: \n \t\t[{time.ctime()}]')
-    print(f'[+] Verify or Create Hash? ')
-    ans = input('**')
-    if ans in verifyq:
-        print(f'[+] -- [Initiating Verification Process] -- ')
-        verify.verify_hash()
-
-    elif ans in createq:
-        print(f'[+] -- [Initiating Hash Creation Process] -- ')
-        create.create_hash()
-
-
-if __name__ == '__main__':
-    main()
-
-    
-    
-
-             # print(hash0.name)
-            # print(hash0.hexidigest())
-            #   hash_obj = str.encode(hash_obj)
-            #  print(f'[+] [NEW HASHES]: \t\t[{hash0}] :: ')
-            #  print(f'[+] [NEW HASHES]: \n [{path}] \n \t\t[{hash_obj.name}] :: [{hash_obj.hexidigest()}]')
-            #  print(f'[+] [NEW HASHES]: \n [{path}] \n \t\t[{hash_obj.name}] :: [{hash_obj.digest()}]')
-            # hash0.update(content)
-# h = getattr(hashlib, finalHash)
-
