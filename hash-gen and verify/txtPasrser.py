@@ -11,6 +11,8 @@ import traceback, sys
 3. take pathes and hash them. ]
 4. use .txt checker to compare hashes. 
 
+## use str chunking to find simiular filenames (hashing wont pick up on it) 
+
 '''
 
 # to compare .txt and read lists --> use for hashing comparassion after prelim check.   
