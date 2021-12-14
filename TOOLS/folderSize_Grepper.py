@@ -4,7 +4,7 @@ def GetFolderSize(path):
     TotalSize = 0
     for item in os.walk(path):
         for file in item[2]:
-            try:
+            try:  ## add path root + file name
                 TotalSize = TotalSize + getsize(join(item[0], file))
             except:
                 print("error with file:  " + join(item[0], file))
