@@ -4,6 +4,9 @@ import hashlib, os, sys, time
 Need to set up two static methods for file detection. 
 1. scandir + hash for same filenames 
 2. glob/**/glob for simular file names / structure. 
+
+## MAKE SURE FILE PATH AS BINARY IS BEING PASSED. DO NOT HASH THE FILENAME/STR. HASH THE BINARY OBJECT. 
+
 '''
 
 
@@ -59,7 +62,9 @@ class hashVerify():
         self.sha384 = hashlib.sha384()
         self.sha512 = hashlib.sha512()
         print(f'[+] Enter the dir for hash verification \n\t\t [+]**[CURRENT-DIR] {os.getcwd()}')
-        self.path = input(r'')
+        self.path = input(r'') ## cha
+        self.path = b'self.path'
+        
         print(f'[+] Enter the hash  ')
         self.hash_toVerify = input('')
         # self.hash_toVerify = hashlib.encode(self.hash_toVerify)
@@ -89,6 +94,9 @@ class hashVerify():
             toVerify = f.read()
             print(f'[+] Verifying :: \n \t\t[{toVerify}]')
             for hash_obj in self.hash_list:
+                print(f'Make sure filepath name is being passed as binary. DO NOT HASH STRING, HASH THE ACTUAL FILE.) 
+                
+                      print(f'Currenlty Hashing, [{hash_obj}]
                 hash0 = getattr(hashlib, hash_obj)
                 m = hashlib.new(hash_obj)
                 m.update(self.path)
@@ -99,10 +107,16 @@ class hashVerify():
                 print(f'[+] [OLD HASH-SIZE]: \n [{self.path}] \n \t\t[{m.name}] :: [{m.digest_size}]')
                 print(f'[+] [OLD BLOCK-SIZE]: \n [{self.path}] \n \t\t[{m.name}] :: [{m.block_size}]')
                 print('X' * 50)
+                
+                hashlib.md5(open('filename.exe','rb').read()).hexdigest()
+'d41d8cd98f00b204e9800998ecf8427e'
 
                 self.hash_toVerify = m.new(hash_obj)
                 # hash_obj.update(toVerify)
                 print(f'[+] Hashed Object: \n [{toVerify}] \n \t\t[{m.name}] :: [{m.hexidigest()}]')
+                
+                m.new(open('/insert/path/to/file/filename.exe','rb').read()).hexdigest()
+
                 if m.hexidigest() == self.hash_toVerify:
                     print('X' * 50)
                     print(f'[+] Matching Hashes Detected \n {self.toVerify}\n\t{m.name}\t\t{m.hexidigest()}')
