@@ -146,7 +146,7 @@ class makeHash():
         print(f'[+] Creating Hashes :: \n \t\t[{self.path}]')
         print(f'\n{"X" * 50} [+] List of Hashes to be created: \n \t\t[+]**[{self.hash_list}]')
         with open(self.path, 'rb') as f:
-            content = f.read()
+            content = f.read() ## converrtas data 
             for hash_obj in self.hash_list:
                 hash0 = getattr(hashlib, hash_obj)  ## create object
                 m = hashlib.new(hash_obj)
@@ -161,6 +161,10 @@ class makeHash():
                 print(f'[+] [NEW HASH-SIZE]: \n \t\t[{m.name}] :: [{m.digest_size}]')
                 print(f'[+] [NEW BLOCK-SIZE]: \n \t\t[{m.name}] :: [{m.block_size}]')
                 print('X' * 50)
+                            
+                ''' create new obj for b(content), see if hash-values match ^'''          
+                m.update(content)
+
 
 def main():
     verify = hashVerify()
