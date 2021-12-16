@@ -24,9 +24,6 @@ SERVER = smtplib.SMTP('smtp.gmail.com', 25) #or 597
 # SERVER.connect("smtp.gmail.com", 25)
 SERVER.ehlo() # starts the smptp process.
 SERVER.starttls()
-
-
-
 USER_NAME = gp.getpass(prompt='[SYS] Your email login: : ', stream=None)
 PASS = gp.getpass(prompt='[SYS] Enter password: : ', stream=None)
 SERVER.login(USER_NAME, PASS)
@@ -34,17 +31,12 @@ RECEIVER = input(f'[SYS] Receiver: ' )
 SUBJECT = input(f'[SYS] Subject: ' )
 FAKE_NAME = input('[SYS] Spoof ID: ')
 
-
-
 def write_msg():
     MESSAGE_TEXT = input(f'[SYS] .txt name:')
     with open(MESSAGE_TEXT, 'a') as f:
         MESSAGE = input(f'[SYS] Enter your message: :')
         f.write(MESSAGE)
         f.close()
-
-
-
         msg = MIMEMultipart() # try taking outside of loop
         msg['From'] = FAKE_NAME
         msg['To'] = RECEIVER
