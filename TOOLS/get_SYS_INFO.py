@@ -1,3 +1,25 @@
+current_platform = platform.system()
+platform_name = sys.platform
+while True:
+    print(f'{yellow}[CHECKING OS]{reset}')
+    if 'Darwin' in current_platform:
+        print(f'{red} Your OS [{current_platform}] || [{platform_name}] \n* You may run into a few issues-**{reset}')
+        period_wait()
+        clear()
+        break
+    elif 'Windows' in current_platform:
+        print(f'{red} Your OS [{current_platform}] || [{platform_name}] sucks. \n**FUCK-WINDOWS-**{reset}')
+        period_wait()
+        clear()
+        break
+    elif 'Linux' in current_platform or 'Ubuntu' in current_platform or 'Kali' in current_platform:
+        print(f'[DETECTED LINUX]')
+        print(f'{yellow}**Your OS [{current_platform}] || Platform [{platform_name}]')
+        period_wait()
+        clear()
+        break
+
+
 try:
     terminal = os.environ.get('TERM')
         width_len = width
