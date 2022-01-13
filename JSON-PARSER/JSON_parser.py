@@ -1,5 +1,8 @@
 import json
 
+'''
+    * Simple Parsing Tool to Read/Write .json login files. 
+'''
 
 class Logins():
     def __init__(self, user, passw):
